@@ -1,0 +1,54 @@
+{
+  "name": "@corsen-ai/universal-connector",
+  "version": "0.1.0",
+  "description": "Universal AI Agent Chrome Connector — by Corsen AI. Local daemon: web-chat tabs as an OpenAI/Anthropic-compatible API, whitelisted tabs as an MCP server, 1-click agent onboarding.",
+  "license": "Apache-2.0",
+  "author": "Corsen AI",
+  "type": "module",
+  "bin": {
+    "universal-connector": "./dist/index.js",
+    "corsen-connector": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "chrome-extension",
+    "openai-compatible",
+    "anthropic-compatible",
+    "browser-automation",
+    "claude-code",
+    "cursor",
+    "cline",
+    "ai-agents"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "start": "node dist/index.js start"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.6",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "hono": "^4.13.17",
+    "jsonc-parser": "^3.3.1",
+    "ws": "^8.22.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@corsen-ai/shared": "workspace:*",
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@types/node": "^22.20.5",
+    "@types/ws": "^8.18.2",
+    "tsdown": "^0.23.7"
+  }
+}

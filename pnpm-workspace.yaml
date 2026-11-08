@@ -1,0 +1,4 @@
+packages:
+  - packages/*
+minimumReleaseAgeExclude:
+  - ws@8.22.2

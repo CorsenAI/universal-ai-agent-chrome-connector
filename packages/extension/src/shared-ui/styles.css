@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #090d16;
+  --color-ink-900: #0d1322;
+  --color-ink-850: #111827;
+  --color-ink-800: #1a2335;
+  --color-ink-700: #1f2a3d;
+  --color-ink-500: #5b6474;
+  --color-ink-400: #8b98ad;
+  --color-ink-200: #c9d3e3;
+  --color-ink-50: #e6edf7;
+  --color-brand: #8b5cf6;
+  --color-brand-2: #22d3ee;
+  --color-ok: #22c55e;
+  --color-warn: #f59e0b;
+  --color-bad: #ef4444;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/*
+ * Unlayered on purpose: Chrome injects its own unlayered stylesheet into extension pages
+ * (body { font-size: 75% }), and unlayered rules beat everything inside @layer base.
+ */
+html,
+html body {
+  background: var(--color-ink-950);
+  color: var(--color-ink-50);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-2);
+    outline-offset: 2px;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

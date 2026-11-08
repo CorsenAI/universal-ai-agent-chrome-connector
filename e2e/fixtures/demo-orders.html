@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Orders — Northwind Ops</title>
+<!-- Invented demo page for the Store screenshots (e2e/store-assets.e2e.ts): no real company, no real data. -->
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 system-ui, "Segoe UI", Ubuntu, sans-serif; color: #1c2330; background: #f5f7fb; }
+  header { display: flex; align-items: center; gap: 28px; padding: 0 28px; height: 56px; background: #12233f; color: #fff; }
+  header strong { font-size: 16px; letter-spacing: 0.01em; }
+  header nav { display: flex; gap: 18px; color: #b9c6dc; }
+  header nav span:first-child { color: #fff; }
+  header .user { margin-left: auto; color: #b9c6dc; }
+  main { padding: 24px 28px; }
+  .bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 22px; }
+  .bar input { margin-left: auto; width: 220px; padding: 8px 10px; border: 1px solid #d5dbe7; border-radius: 8px; font: inherit; background: #fff; }
+  button { padding: 8px 14px; border: 0; border-radius: 8px; font: inherit; font-weight: 600; color: #fff; background: #2f6fed; cursor: pointer; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi { padding: 14px 16px; border: 1px solid #e3e8f1; border-radius: 12px; background: #fff; }
+  .kpi span { color: #65718a; font-size: 13px; }
+  .kpi b { display: block; margin-top: 4px; font-size: 22px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e3e8f1; border-radius: 12px; overflow: hidden; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eef1f6; }
+  th { color: #65718a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; background: #fafbfd; }
+  .tag { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .late { color: #b42318; background: #fde8e7; }
+  .ok { color: #106b3a; background: #e3f6ea; }
+  .wait { color: #8a5a00; background: #fff3d6; }
+  .card { margin-top: 18px; padding: 14px 16px; border: 1px solid #e3e8f1; border-radius: 12px; background: #fff; }
+  .card h2 { margin: 0 0 10px; font-size: 15px; }
+  .card label { display: block; margin: 8px 0 4px; color: #65718a; font-size: 13px; }
+  .card input { width: 100%; padding: 8px 10px; border: 1px solid #d5dbe7; border-radius: 8px; font: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Northwind Ops</strong>
+  <nav><span>Orders</span><span>Shipments</span><span>Customers</span><span>Settings</span></nav>
+  <span class="user">Ada · Operations</span>
+</header>
+<main>
+  <div class="bar">
+    <h1>Orders</h1>
+    <input type="search" aria-label="Search orders" placeholder="Search orders">
+    <button type="button">New order</button>
+  </div>
+  <section class="kpis">
+    <div class="kpi"><span>Open orders</span><b>128</b></div>
+    <div class="kpi"><span>Late shipments</span><b>7</b></div>
+    <div class="kpi"><span>Revenue today</span><b>$18,420</b></div>
+  </section>
+  <table>
+    <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead>
+    <tbody>
+      <tr><td>#10482</td><td>Blue Harbor Cafe</td><td><span class="tag late">Late</span></td><td>$1,240.00</td></tr>
+      <tr><td>#10481</td><td>Kestrel Labs</td><td><span class="tag ok">Shipped</span></td><td>$5,980.50</td></tr>
+      <tr><td>#10480</td><td>Maple Street Books</td><td><span class="tag wait">Packing</span></td><td>$312.75</td></tr>
+      <tr><td>#10479</td><td>Orbit Cycles</td><td><span class="tag ok">Shipped</span></td><td>$2,105.00</td></tr>
+      <tr><td>#10478</td><td>Quarry Supply</td><td><span class="tag late">Late</span></td><td>$874.20</td></tr>
+    </tbody>
+  </table>
+  <section class="card">
+    <h2>Integrations</h2>
+    <label for="hook">Webhook URL</label>
+    <input id="hook" value="https://hooks.northwind.example/orders">
+    <label for="secret">Webhook secret</label>
+    <input id="secret" type="password" value="nw-whsec-4f9a1c">
+  </section>
+</main>
+<script>
+  // The page's own API call, for the network capture shown in the activity feed.
+  fetch('/api/items', { headers: { authorization: 'Bearer demo-session-token' } }).catch(() => {})
+</script>
+</body>
+</html>

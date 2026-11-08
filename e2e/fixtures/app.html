@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture App</title>
+</head>
+<body>
+<main>
+  <h1>Inventory dashboard</h1>
+  <p>Signed in as <strong>Ada</strong>. Read the <a href="/docs?access_token=SECRET123&page=2">documentation</a>.</p>
+  <h2>Counter</h2>
+  <p id="count">Count: 0</p>
+  <button id="inc" type="button">Increment</button>
+  <form id="login" onsubmit="return false">
+    <label for="email">Email</label>
+    <input id="email" type="email" value="">
+    <label for="pw">Password</label>
+    <input id="pw" type="password" value="hunter2">
+    <select id="plan" aria-label="Plan"><option value="free">Free</option><option value="pro">Pro</option></select>
+  </form>
+  <table><tr><th>Item</th><th>Qty</th></tr><tr><td>Bolts</td><td>12</td></tr></table>
+  <p style="display:none">Hidden secret text</p>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

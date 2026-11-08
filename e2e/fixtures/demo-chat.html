@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Demo chat — calibrated site</title>
+<!-- Demo chat for the Store screenshots (same behavior as chat.html, driven by chat.js). -->
+<style>
+  body { margin: 0; padding: 24px; font: 14px/1.5 system-ui, "Segoe UI", Ubuntu, sans-serif; color: #1c2330; background: #fff; }
+  #stop { display: none; }
+  body.streaming #stop { display: inline-block; }
+  .user { margin: 10px 0; padding: 8px 12px; border-radius: 10px; background: #eef2fb; }
+  .answer { margin: 10px 0; padding: 8px 12px; border: 1px solid #e3e8f1; border-radius: 10px; }
+  textarea { width: 100%; font: inherit; }
+</style>
+</head>
+<body>
+<div id="messages"></div>
+<form id="composer" onsubmit="return false">
+  <textarea id="prompt" rows="3" placeholder="Message"></textarea>
+  <button id="send" type="button">Send</button>
+  <button id="stop" type="button">Stop</button>
+</form>
+<script src="/chat.js"></script>
+</body>
+</html>

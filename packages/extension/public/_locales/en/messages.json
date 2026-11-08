@@ -1,0 +1,6 @@
+{
+  "extName": { "message": "Universal AI Agent Connector — by Corsen AI", "description": "Extension name: Store title, at most 45 characters, no Google trademark." },
+  "extShortName": { "message": "Corsen Connector", "description": "Short name." },
+  "extDescription": { "message": "Your signed-in web chats become a local OpenAI/Anthropic API; tabs you choose become MCP tools for AI agents. Local only.", "description": "Store description (max 132 chars)." },
+  "actionTitle": { "message": "Corsen Connector — choose this tab's role", "description": "Toolbar button tooltip." }
+}

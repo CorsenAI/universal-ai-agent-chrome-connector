@@ -1,0 +1,31 @@
+{
+  "name": "@corsen-ai/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal AI Agent Chrome Connector \u2014 by Corsen AI (Chrome MV3 extension).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch --mode development",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json"
+  },
+  "dependencies": {
+    "lucide-react": "^1.70.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@corsen-ai/shared": "workspace:*",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/chrome": "^0.3.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "devtools-protocol": "^0.0.1734725",
+    "happy-dom": "^21.0.4",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.6"
+  }
+}

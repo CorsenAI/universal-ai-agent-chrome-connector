@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture Chat</title>
+<style>
+  body { font-family: sans-serif; }
+  #stop { display: none; }
+  body.streaming #stop { display: inline-block; }
+  .answer { border: 1px solid #ccc; margin: 8px 0; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="messages"></div>
+<form id="composer" onsubmit="return false">
+  <textarea id="prompt" rows="3" cols="60" placeholder="Message"></textarea>
+  <button id="send" type="button">Send</button>
+  <button id="stop" type="button">Stop</button>
+</form>
+<script src="/chat.js"></script>
+</body>
+</html>

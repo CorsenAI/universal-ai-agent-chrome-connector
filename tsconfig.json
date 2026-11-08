@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "types": ["node", "chrome"], "lib": ["es2023", "dom"] },
+  "include": ["vitest.config.ts", "e2e/**/*.ts"]
+}

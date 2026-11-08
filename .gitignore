@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+*.tsbuildinfo
+coverage/
+
+# test artifacts
+test-results/
+playwright-report/
+e2e/.artifacts/
+
+# logs and local state
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+
+# editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Store packages (scripts/package-extension.mjs)
+release/
