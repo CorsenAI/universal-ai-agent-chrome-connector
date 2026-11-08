@@ -9,8 +9,9 @@ export function cx(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(' ')
 }
 
-export function Logo({ size = 22 }: { size?: number }) {
-  return <img src="icons/icon-48.png" width={size} height={size} alt="" className="rounded-md" />
+export function Logo({ size = 28 }: { size?: number }) {
+  // The Corsen AI mark on a transparent background (the toolbar icons sit on a dark tile).
+  return <img src="icons/mark.png" width={size} height={size} alt="" />
 }
 
 const STATUS_TONE: Record<LinkStatus, 'ok' | 'warn' | 'bad'> = {

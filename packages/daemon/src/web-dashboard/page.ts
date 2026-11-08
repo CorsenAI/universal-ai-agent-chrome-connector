@@ -18,7 +18,7 @@ const HEAD = (title: string, extra = ''): string => `<!doctype html>
 <meta name="color-scheme" content="dark light">
 <meta name="robots" content="noindex">
 <title>${escapeHtml(title)}</title>
-<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/logo.png" type="image/png">
 <link rel="stylesheet" href="/assets/dashboard.css">
 ${extra}
 </head>`
@@ -33,7 +33,7 @@ export function dashboardPage(options: { pairingSecret: string; port: number }):
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="topbar">
-  <div class="brand"><img src="/assets/logo.svg" alt="" width="28" height="28"><div><strong>Universal AI Agent Connector</strong><span>by Corsen AI · v${escapeHtml(VERSION)}</span></div></div>
+  <div class="brand"><img src="/assets/logo.png" alt="" width="34" height="34"><div><strong>Universal AI Agent Connector</strong><span>by Corsen AI · v${escapeHtml(VERSION)}</span></div></div>
   <nav class="pills" aria-label="Status">
     <span class="pill" id="pill-daemon"><i></i>Daemon</span>
     <span class="pill" id="pill-browser"><i></i>Extension</span>
@@ -90,7 +90,7 @@ export function loginPage(options: { error?: string | undefined }): string {
   return `${HEAD(`${PRODUCT_FULL_NAME} — Sign in`)}
 <body class="login">
 <main class="card narrow">
-  <img src="/assets/logo.svg" alt="" width="48" height="48">
+  <img src="/assets/logo.png" alt="" width="48" height="48">
   <h1>Corsen Connector</h1>
   <p class="muted">Open the dashboard from your terminal with <code>npx @corsen-ai/universal-connector dashboard</code>, or paste the API key it prints.</p>
   ${options.error !== undefined ? `<p class="error" role="alert">${escapeHtml(options.error)}</p>` : ''}

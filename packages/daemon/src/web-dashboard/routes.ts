@@ -14,7 +14,7 @@ import { dashboardPage, loginPage } from './page'
 const STATIC_FILES: Readonly<Record<string, string>> = {
   'dashboard.js': 'text/javascript; charset=utf-8',
   'dashboard.css': 'text/css; charset=utf-8',
-  'logo.svg': 'image/svg+xml',
+  'logo.png': 'image/png',
 }
 
 /** `dist/web` once bundled, `src/web-dashboard/static` when running from source (tests). */
@@ -34,7 +34,8 @@ const PAGE_HEADERS: Readonly<Record<string, string>> = {
 
 export function registerDashboardRoutes(app: Hono, ctx: DaemonContext, guards: GuardOptions): void {
   const staticDir = resolveStaticDir()
-  const cache = new Map<string, string>()
+  // Static files are served as bytes: text and images alike (a UTF-8 round trip corrupts a PNG).
+  const cache = new Map<string, ArrayBuffer>()
   const cookieOptions = { httpOnly: true, sameSite: 'Strict' as const, path: '/', maxAge: 12 * 60 * 60 }
 
   app.get('/assets/:file', (c) => {
@@ -44,7 +45,8 @@ export function registerDashboardRoutes(app: Hono, ctx: DaemonContext, guards: G
     let body = cache.get(file)
     if (body === undefined) {
       try {
-        body = readFileSync(join(staticDir, file), 'utf8')
+        const bytes = readFileSync(join(staticDir, file))
+        body = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
         cache.set(file, body)
       } catch {
         return c.notFound()

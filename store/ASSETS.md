@@ -27,24 +27,26 @@ The script refuses to write screenshot 3 unless the page's webhook secret is mas
 Every image is checked for the Store's format (exact size, 24-bit RGB without alpha) and for a
 repeated band (a stale capture).
 
-## Promotional tiles and icon
+## Promotional tiles and icons
 
-The tiles are HTML rendered by the same Chromium at the Store's exact sizes: the extension's logo
-(`packages/daemon/src/web-dashboard/static/logo.svg`), the product name and "by Corsen AI" on the
+The tiles are HTML rendered by the same Chromium at the Store's exact sizes: the Corsen AI mark
+(`brand/corsen-mark.png`, the company's own artwork), the product name and "by Corsen AI" on the
 brand's dark gradient; the marquee adds one line. No third-party marks, no interface mock-up.
-`store-icon-128.png` is the package's own 128-pixel icon: 96-pixel artwork with 16 pixels of
-transparent padding per side (`scripts/generate-icons.py`).
+`store-icon-128.png` is the Store icon Corsen AI's connectors share (the mark with the wordmark);
+the package's own icons (`packages/extension/public/icons/`) are the mark as the company's other
+connectors ship it, `icon-32.png` being derived from the 128-pixel file (D-018).
 
 ## Files, generated on 2026-11-08
 
 | File | Size | Bytes | SHA-256 |
 |---|---|---|---|
-| `store-icon-128.png` | 128×128 | 8163 | `8b152ce2916d7d81035e48b0a63d181848a2a824b625d2e3ce0db22e67f41f6f` |
-| `screenshots/01-connect.png` | 1280×800 | 231296 | `3a0d724474d55dc1aed90da7ec84dba0b52d21b22a1894a3b6b2e30caa598be1` |
-| `screenshots/02-tab-roles.png` | 1280×800 | 115548 | `4a691b7e09c25c573b8c506db0e095557d483a1360c5b3e125d104f2b7b5524a` |
-| `screenshots/03-agent-view.png` | 1280×800 | 128215 | `07e56d04e3390ed574abd0fd839bcfb8c2d47db0e4412b0646d013bcbea246e4` |
-| `promo-small-440x280.png` | 440×280 | 57900 | `28946b803e64b0bb777f696225fbdf20cb590132e80ba11d343209d678ce8bd1` |
-| `promo-marquee-1400x560.png` | 1400×560 | 250047 | `9e022ff6673931ad8444a0b226b871cd7d2cd3bf6e13bf570817e8e44454178d` |
+| `store-icon-128.png` | 128×128 | 15492 | `50d498c65573e7fa74b638858dd300f685d5bfdbd20ad346a807a2d2cc14ebbf` |
+| `screenshots/01-connect.png` | 1280×800 | 232971 | `796e596486ced75a8f3d85dc9a37dbe9eab21e896a26d5a16a51d04ab6893128` |
+| `screenshots/02-tab-roles.png` | 1280×800 | 116170 | `f206956c4091386206c19b13a451b7be81e7b9bf88ef9c8b1373158716b4da80` |
+| `screenshots/03-agent-view.png` | 1280×800 | 129021 | `78b96b28c9bdcb8f3fe56fb8d742ff59df95b3e388bc032ab06acf5e3ae4d857` |
+| `promo-small-440x280.png` | 440×280 | 83520 | `90e2fe3d84dbd551b40682f819b5084155708a9680e714022e1ea72a59035cda` |
+| `promo-marquee-1400x560.png` | 1400×560 | 319170 | `e695008808f6afb605c9ff4953832390fbec0ab9d1f9a1a40b5dff6a54c57212` |
+| `brand/corsen-mark.png` | 344×373 | 146349 | `dc328f34079643ad2ff76ebd98aeab5299ac9d20dc6305ffd7b953164a191854` |
 
 Environment: Linux, Chrome for Testing 156 (Playwright 1.65), Node 26. Fonts come from the system,
 so a run on another system can differ in glyph rendering; the loopback port in screenshot 3 differs

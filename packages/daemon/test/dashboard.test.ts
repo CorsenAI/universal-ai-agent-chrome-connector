@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AgentConfigurator } from '../src/agent-configurator/configurator'
@@ -99,5 +100,14 @@ describe('dashboard authentication', () => {
     expect(js.status).toBe(200)
     expect(js.headers.get('content-type')).toContain('javascript')
     expect((await fetch(`${base()}/assets/../credentials.json`)).status).toBe(404)
+  })
+
+  it('serves binary assets byte for byte', async () => {
+    const response = await fetch(`${base()}/assets/logo.png`)
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('image/png')
+    const served = Buffer.from(await response.arrayBuffer())
+    const onDisk = readFileSync(join(import.meta.dirname, '..', 'src', 'web-dashboard', 'static', 'logo.png'))
+    expect(served.equals(onDisk)).toBe(true)
   })
 })

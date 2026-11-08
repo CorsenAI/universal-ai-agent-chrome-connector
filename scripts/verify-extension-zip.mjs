@@ -26,7 +26,7 @@ const ALLOWED_FILES = [
   /^background\.js$/,
   /^(popup|sidepanel)\.html$/,
   /^assets\/[\w.-]+\.(js|css)$/,
-  /^icons\/icon-(16|32|48|128)\.png$/,
+  /^icons\/(icon-(16|32|48|128)|mark)\.png$/,
   /^_locales\/(en|fr)\/messages\.json$/,
 ]
 const ALLOWED_KEYS = new Set([

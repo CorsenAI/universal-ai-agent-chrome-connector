@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client'
 import { chromium, type Browser, type Page } from 'playwright'
@@ -11,7 +11,8 @@ import { ROOT, chromiumBinary, launchBrowser, startDaemon, startFixtureServer, w
  * data. Screenshots are 1280x800, laid out the way Chrome shows a page beside its side panel (page
  * 879 px, 1 px divider, panel 400 px), full bleed, RGB without alpha, as the Store asks
  * (developer.chrome.com/docs/webstore/images). Promotional tiles are HTML rendered by the same
- * Chromium at the Store's exact sizes. Provenance and hashes: store/ASSETS.md.
+ * Chromium at the Store's exact sizes, from the Corsen AI mark (store/brand). Provenance and hashes:
+ * store/ASSETS.md.
  *
  * Compositions and tiles are rendered in a second, extension-free browser: while the connector
  * debugs a tab, Chrome's "started debugging this browser" bar shortens the visible area of every
@@ -23,7 +24,7 @@ const SIZE = { width: 1280, height: 800 }
 const PANEL = { width: 400, height: 800 }
 const PAGE = { width: SIZE.width - PANEL.width - 1, height: 800 }
 const SECRET = 'nw-whsec-4f9a1c'
-const LOGO = readFileSync(join(ROOT, 'packages', 'daemon', 'src', 'web-dashboard', 'static', 'logo.svg'), 'utf8')
+const MARK = `data:image/png;base64,${readFileSync(join(ROOT, 'store', 'brand', 'corsen-mark.png')).toString('base64')}`
 
 let daemon: DaemonProcess
 let browser: BrowserHandle
@@ -109,7 +110,7 @@ async function panelView(tab: RegExp | null): Promise<Buffer> {
 }
 
 function tileHtml(width: number, height: number, wide: boolean): string {
-  const logo = LOGO.replace('<svg ', `<svg width="${wide ? 220 : 112}" height="${wide ? 220 : 112}" `)
+  const logo = `<img src="${MARK}" height="${wide ? 300 : 160}" alt="">`
   const name = wide ? 'Universal AI Agent Connector' : 'Universal AI<br>Agent Connector'
   const tagline = wide ? '<p>The tabs you choose, for the AI agents on your computer</p>' : ''
   return `<!doctype html><html><head><style>
@@ -213,9 +214,8 @@ describe.skipIf(process.env['STORE_ASSETS'] === undefined)('Chrome Web Store ima
     await compose('03-agent-view.png', await render(view, PAGE), await panelView(/activity|Activité/i))
   })
 
-  it('renders the promotional tiles and copies the store icon', async () => {
+  it('renders the promotional tiles', async () => {
     await checked(join(OUT, 'promo-small-440x280.png'), await render(tileHtml(440, 280, false), { width: 440, height: 280 }), { width: 440, height: 280 })
     await checked(join(OUT, 'promo-marquee-1400x560.png'), await render(tileHtml(1400, 560, true), { width: 1400, height: 560 }), { width: 1400, height: 560 })
-    copyFileSync(join(ROOT, 'packages', 'extension', 'public', 'icons', 'icon-128.png'), join(OUT, 'store-icon-128.png'))
   })
 })

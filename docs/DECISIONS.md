@@ -139,9 +139,19 @@ that fence, the label becoming its language; code text skips gutters (class or `
 and turns one-div-per-line editors into lines. Proven by `packages/extension/test/distiller.test.ts`
 (five header shapes, gutters, prose kept) and by the E2E chat fixture, whose blocks carry such chrome.
 
-## D-017 — Store icon padding (2026-11-08)
+## D-017 — Store icon padding (2026-11-08) — Superseded by D-018
 
 The Store takes its icon from the package's 128-pixel icon, whose artwork "should be 96x96 for square
 icons, with 16 px transparent padding per side" (developer.chrome.com/docs/webstore/images).
 Decision: `scripts/generate-icons.py` draws the 128-pixel icon at 96 pixels on a transparent canvas;
 the toolbar sizes (16, 32, 48) stay full-bleed.
+
+## D-018 — The Corsen AI mark is the only logo (2026-11-08)
+
+The first build shipped a drawn placeholder icon. Corsen AI's connectors share one identity: the
+Corsen AI mark (`store/brand/corsen-mark.png`, the company's own artwork) rendered as the extension
+icons (`icon-16/48/128.png`, the same files the DeepSeek Harness Connector ships; `icon-32.png` is
+derived from the 128) and, for the listing, the Store icon with the wordmark (`store/store-icon-128.png`,
+the one the company's other connectors use). The dashboard shows the mark (`logo.png`); promotional
+tiles are rendered from the mark. Package icons are full-bleed like the other connectors' — the
+listing's Store icon is uploaded separately, so D-017's padding no longer applies.
