@@ -6,8 +6,9 @@
  * mismatched peer instead of guessing.
  */
 
-export const PRODUCT_NAME = 'Universal AI Agent Chrome Connector'
-export const PRODUCT_FULL_NAME = 'Universal AI Agent Chrome Connector — by Corsen AI'
+/** Product name shown in user interfaces and in the Chrome Web Store (no Google trademark, D-014). */
+export const PRODUCT_NAME = 'Universal AI Agent Connector'
+export const PRODUCT_FULL_NAME = 'Universal AI Agent Connector — by Corsen AI'
 export const VENDOR = 'Corsen AI'
 export const PACKAGE_NAME = '@corsen-ai/universal-connector'
 export const CLI_NAME = 'universal-connector'
