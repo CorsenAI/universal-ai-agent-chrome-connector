@@ -13,7 +13,7 @@ What the listing needs and where each item lives. A "done" is backed by a comman
 | Version equal across manifest and package | done (0.1.0) | checked by `scripts/package-extension.mjs` |
 | No remote code, no `eval`, no obfuscation (unminified) | done | D-010, D-011; scanned by `scripts/verify-extension-zip.mjs` and the E2E hygiene test |
 | Frozen permission set, no host permissions | done | D-005; enforced by `scripts/verify-extension-zip.mjs` |
-| ZIP from a clean commit, reproducible, SHA-256 recorded | done | `pnpm package:extension` → `release/` (D-015) |
+| ZIP from a clean commit, reproducible, SHA-256 recorded | done | `pnpm package:extension` → `release/` (D-015); attached to the GitHub release `v0.1.0` |
 | ZIP read back independently, byte for byte with the build | done | `pnpm verify:extension` |
 | Unpacked ZIP passes the real-browser suite | done | `EXTENSION_DIR=<unzipped> pnpm test:e2e` |
 
@@ -25,7 +25,7 @@ What the listing needs and where each item lives. A "done" is backed by a comman
 | Justification per permission | done | `PERMISSION-JUSTIFICATIONS.md` |
 | Data-use disclosures and form answers | done | `DATA-DISCLOSURES.md` |
 | Privacy policy text | done | `docs/privacy/index.html` |
-| Privacy policy at its public address | to publish | `https://corsen.ai/privacy/universal-ai-agent-connector/` |
+| Privacy policy at its public address | done | `https://corsen.ai/privacy/universal-ai-agent-connector/` |
 | Reviewer instructions | done | `REVIEWER-INSTRUCTIONS.md` |
 
 ## Listing
