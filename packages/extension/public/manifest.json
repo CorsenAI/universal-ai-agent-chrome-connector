@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
-  "homepage_url": "https://github.com/CorsenAI",
+  "homepage_url": "https://github.com/CorsenAI/universal-ai-agent-chrome-connector",
   "minimum_chrome_version": "125",
   "incognito": "not_allowed",
   "icons": {

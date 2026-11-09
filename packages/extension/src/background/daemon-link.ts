@@ -303,7 +303,7 @@ export class DaemonLink {
       return
     }
     if (this.#status === 'denied' || this.#status === 'version') return
-    this.#set('offline', 'The connector daemon is not reachable. Start it with: npx @corsen-ai/universal-connector')
+    this.#set('offline', 'The connector daemon is not reachable. Start it from the repository checkout with: pnpm connector')
     this.#scheduleRetry()
   }
 

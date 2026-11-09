@@ -40,8 +40,8 @@ What the listing needs and where each item lives. A "done" is backed by a comman
 
 ## Before submitting
 
-- The companion app the listing and the reviewer instructions name is installable:
-  `npx @corsen-ai/universal-connector` (npm package published at the same version).
+- The companion app the listing and the reviewer instructions name runs from the public repository at
+  the submitted version: `pnpm install && pnpm build && pnpm connector` on a fresh clone.
 - The repository named in the listing is public at that address.
 - The privacy policy answers at its public address.
 - The dashboard's data-use form is filled from `DATA-DISCLOSURES.md` and reread on submission day.

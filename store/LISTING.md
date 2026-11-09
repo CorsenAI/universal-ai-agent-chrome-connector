@@ -40,7 +40,7 @@ PRIVATE BY DEFAULT, VISIBLE, REVERSIBLE
 • The extension talks only to the companion on 127.0.0.1, after a mutual HMAC pairing. No analytics, no telemetry, no remote code.
 
 REQUIREMENTS
-The companion app, free and open source (Apache-2.0): Node.js 22 or newer, then run npx @corsen-ai/universal-connector. Source and documentation: https://github.com/CorsenAI/universal-ai-agent-chrome-connector
+The companion app, free and open source (Apache-2.0), runs from its GitHub repository: Node.js 22 or newer and pnpm, then clone https://github.com/CorsenAI/universal-ai-agent-chrome-connector and run pnpm install, pnpm build and pnpm connector. Step-by-step guide in the repository README.
 
 Unofficial community project by Corsen AI. Not affiliated with or endorsed by Google, Anthropic, OpenAI, DeepSeek, Alibaba, Moonshot, Cursor, Cognition, Cline or Roo Code. Using a chat service through its web page is subject to that service's terms; you are responsible for how you use your accounts.
 ```
@@ -87,7 +87,7 @@ PRIVÉ PAR DÉFAUT, VISIBLE, RÉVERSIBLE
 • L'extension ne parle qu'à l'application compagnon sur 127.0.0.1, après un appairage HMAC mutuel. Ni statistiques, ni télémétrie, ni code distant.
 
 PRÉREQUIS
-L'application compagnon, gratuite et open source (Apache-2.0) : Node.js 22 ou plus récent, puis npx @corsen-ai/universal-connector. Code source et documentation : https://github.com/CorsenAI/universal-ai-agent-chrome-connector
+L'application compagnon, gratuite et open source (Apache-2.0), s'exécute depuis son dépôt GitHub : Node.js 22 ou plus récent et pnpm, puis clonez https://github.com/CorsenAI/universal-ai-agent-chrome-connector et lancez pnpm install, pnpm build et pnpm connector. Guide pas à pas dans le README du dépôt.
 
 Projet communautaire non officiel de Corsen AI. Sans lien avec Google, Anthropic, OpenAI, DeepSeek, Alibaba, Moonshot, Cursor, Cognition, Cline ou Roo Code, ni approuvé par eux. Utiliser un service de chat par sa page web relève des conditions de ce service ; vous êtes responsable de l'usage de vos comptes.
 ```

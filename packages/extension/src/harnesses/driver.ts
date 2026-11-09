@@ -3,7 +3,7 @@ import type { DebuggerManager } from '../cdp/debugger-manager'
 import type { TrustedInput } from '../cdp/input'
 import type { IsolatedWorlds } from '../cdp/world'
 import { corsenDistill } from '../inpage/distiller'
-import { corsenHarnessProbe, type ProbeOptions, type ProbeResult } from '../inpage/harness-probe'
+import { corsenHarnessProbe, type ProbeBaseline, type ProbeOptions, type ProbeResult } from '../inpage/harness-probe'
 import { resolveHarness, type HarnessOverrides, type ResolvedHarness } from './registry'
 import { BlockStreamCommitter } from './stream-committer'
 
@@ -18,6 +18,8 @@ export interface DriverDeps {
 const POLL_MS = 150
 const STABLE_MS = 1_800
 const START_TIMEOUT_MS = 25_000
+/** After the stop control is gone, how long an answer that matched no response selector may stay empty. */
+const NO_ANSWER_GRACE_MS = 8_000
 const MAX_ANSWER_CHARS = 1_500_000
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
 const collapse = (text: string): string => text.replace(/\s+/g, '')
@@ -53,7 +55,7 @@ export class HarnessDriver {
     }
   }
 
-  async #probe(tabId: number, harness: ResolvedHarness, op: ProbeOptions['op']): Promise<ProbeResult> {
+  async #probe(tabId: number, harness: ResolvedHarness, op: ProbeOptions['op'], baseline: ProbeBaseline | null = null): Promise<ProbeResult> {
     const options: ProbeOptions = {
       op,
       input: harness.selectors.input,
@@ -63,6 +65,7 @@ export class HarnessDriver {
       exclude: harness.selectors.exclude,
       streamingAttribute: harness.streamingAttribute,
       maxChars: MAX_ANSWER_CHARS,
+      baseline: baseline ?? undefined,
     }
     let result = await this.#deps.worlds.call(tabId, corsenHarnessProbe, [options])
     if (result.needsDistiller) {
@@ -110,6 +113,9 @@ export class HarnessDriver {
     await this.#waitForInput(tabId, harness, 20_000)
     const prepared = await this.#probe(tabId, harness, 'prepare')
     if (prepared.input === null) throw new ConnectorError('HARNESS_FAILED', 'the chat input disappeared; recalibrate this site in the Tab Manager')
+    // What the page already showed before the prompt: kept here, so a document replaced by the site
+    // on submit (and the isolated world with it) is still polled against the same baseline.
+    const baseline = prepared.baseline
 
     // Type the prompt with trusted input: focus, replace any draft, insert.
     io.emit({ kind: 'status', status: 'typing' })
@@ -131,7 +137,7 @@ export class HarnessDriver {
     let latest: ProbeResult | null = null
     for (;;) {
       if (io.signal.aborted) throw new ConnectorError('CANCELLED', 'cancelled before the chat answered')
-      latest = await this.#probe(tabId, harness, 'poll')
+      latest = await this.#probe(tabId, harness, 'poll', baseline)
       if (latest.newest !== null || latest.stop !== null) break
       const waited = Date.now() - started
       if (!retriedSubmit && waited > 3_000) {
@@ -147,6 +153,7 @@ export class HarnessDriver {
     const committer = new BlockStreamCommitter()
     let lastSignature = ''
     let lastChange = Date.now()
+    let lastGenerating = Date.now()
     let sawStop = latest.stop !== null || latest.newest?.streaming === true
     let finishReason: LlmGenerateResult['finishReason'] = 'stop'
     let blocks: string[] = latest.newest?.blocks ?? []
@@ -169,12 +176,20 @@ export class HarnessDriver {
       const delta = committer.update(blocks, false)
       if (delta !== '') io.emit({ kind: 'delta', text: delta })
       const generating = latest.stop !== null || latest.newest?.streaming === true
-      if (generating) sawStop = true
+      if (generating) {
+        sawStop = true
+        lastGenerating = Date.now()
+      }
       const quietFor = Date.now() - lastChange
       const hasText = (latest.newest?.textLength ?? 0) > 0
       if (!generating && hasText && quietFor >= (sawStop ? 700 : STABLE_MS)) break
+      // The site finished (its stop control went away) but nothing matched the response selectors:
+      // waiting for the deadline would only hide a selector problem. Fail with the reason instead.
+      if (!generating && !hasText && Date.now() - lastGenerating >= NO_ANSWER_GRACE_MS) {
+        throw new ConnectorError('HARNESS_FAILED', 'the chat finished answering but no response element matched this site; recalibrate it in the Tab Manager')
+      }
       await sleep(POLL_MS)
-      latest = await this.#probe(tabId, harness, 'poll')
+      latest = await this.#probe(tabId, harness, 'poll', baseline)
     }
 
     const tail = committer.update(blocks, true)

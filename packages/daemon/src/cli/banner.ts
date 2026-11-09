@@ -28,6 +28,8 @@ export interface BannerInfo {
   readonly pairingSecret: string
   readonly apiToken: string
   readonly showToken: boolean
+  /** The command the user runs the CLI with (see cli-name.ts). */
+  readonly cli: string
 }
 
 export function startBanner(info: BannerInfo): string {
@@ -39,15 +41,16 @@ export function startBanner(info: BannerInfo): string {
     '',
     `  ${green('●')} Daemon       ${base}  ${dim('(loopback only)')}`,
     `  ${bold('Dashboard')}    ${info.dashboardUrl}`,
+    `  ${bold('Extension')}    ${dim('Chrome Web Store › Universal AI Agent Connector — by Corsen AI')}`,
     `  ${bold('Pairing code')} ${bold(formatPairingCode(info.pairingSecret))}  ${dim('→ extension popup › Pair, or paste it in the side panel')}`,
-    `  ${bold('API key')}      ${info.showToken ? info.apiToken : `${maskToken(info.apiToken)}  ${dim('(universal-connector token --show)')}`}`,
+    `  ${bold('API key')}      ${info.showToken ? info.apiToken : `${maskToken(info.apiToken)}  ${dim(`(${info.cli} token --show)`)}`}`,
     '',
     `  ${dim('OpenAI base URL   ')} ${base}/v1`,
     `  ${dim('Anthropic base URL')} ${base}`,
-    `  ${dim('MCP (HTTP)        ')} ${base}/mcp   ${dim('· stdio: universal-connector mcp')}`,
+    `  ${dim('MCP (HTTP)        ')} ${base}/mcp   ${dim(`· stdio: ${info.cli} mcp`)}`,
     '',
-    `  Next: ${cyan('universal-connector setup')} to connect Claude Code, Cursor, Cline… in one step.`,
-    `  ${dim('Ctrl+C to stop.')}`,
+    `  Next: ${cyan(`${info.cli} setup`)} to connect Claude Code, Cursor, Cline… in one step.`,
+    `  ${dim('Ctrl+C to stop. Documentation and issues: https://github.com/CorsenAI/universal-ai-agent-chrome-connector')}`,
     '',
   ].join('\n')
 }

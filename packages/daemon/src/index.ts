@@ -3,7 +3,7 @@ import { parseCli } from './cli/args'
 import { cmdDashboard, cmdHelp, cmdMcp, cmdRestore, cmdSetup, cmdStart, cmdStatus, cmdStop, cmdToken, cmdUnlink, cmdVersion } from './cli/commands'
 
 /**
- * `npx @corsen-ai/universal-connector [command]` — Universal AI Agent Chrome Connector, by Corsen AI.
+ * `universal-connector [command]` (`pnpm connector [command]` from the repository checkout) — Universal AI Agent Chrome Connector, by Corsen AI.
  * Stdout belongs to MCP in `mcp` mode: errors always go to stderr.
  */
 async function main(): Promise<void> {

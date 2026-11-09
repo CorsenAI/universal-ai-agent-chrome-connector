@@ -5,14 +5,14 @@ which runs on the same computer. These steps show it working in a few minutes, w
 
 ## Setup (about five minutes)
 
-You need Node.js 22 or newer.
+You need Node.js 22 or newer and pnpm. The daemon runs from its public repository:
 
 ```bash
-npx @corsen-ai/universal-connector start
+git clone https://github.com/CorsenAI/universal-ai-agent-chrome-connector.git
+cd universal-ai-agent-chrome-connector
+pnpm install && pnpm build
+pnpm connector
 ```
-
-(From source instead: `git clone https://github.com/CorsenAI/universal-ai-agent-chrome-connector`,
-then `pnpm install && pnpm build && node packages/daemon/dist/index.js start`.)
 
 The daemon starts on `127.0.0.1:43110` and opens its local dashboard in the browser.
 
@@ -29,7 +29,7 @@ Any ordinary page works; `https://example.com` is enough.
 2. In a terminal, read the API key and call two tools the way an agent would:
 
 ```bash
-KEY=$(npx @corsen-ai/universal-connector token --show | sed -n 's/^API key: *//p')
+KEY=$(pnpm connector token --show | sed -n 's/^API key: *//p')
 curl -s http://127.0.0.1:43110/api/tools/call -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" -d '{"name":"browser_list_targets","arguments":{}}'
 curl -s http://127.0.0.1:43110/api/tools/call -H "Authorization: Bearer $KEY" \

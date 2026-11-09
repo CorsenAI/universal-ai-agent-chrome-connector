@@ -18,6 +18,7 @@
     "test:e2e": "vitest run --config e2e/vitest.config.ts",
     "typecheck": "pnpm -r run typecheck && tsc --noEmit -p tsconfig.json",
     "start": "node packages/daemon/dist/index.js start",
+    "connector": "node packages/daemon/dist/index.js",
     "setup-agents": "node packages/daemon/dist/index.js setup",
     "clean": "pnpm -r exec rm -rf dist",
     "screenshots": "CAPTURE=1 vitest run --config e2e/vitest.config.ts e2e/capture.e2e.ts",

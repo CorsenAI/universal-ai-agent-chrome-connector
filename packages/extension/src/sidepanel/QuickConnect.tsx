@@ -6,7 +6,9 @@ import { Button, Card, CopyField, ErrorNote, StatusPill, linkTone, statusLabel }
 import { t } from '../shared-ui/i18n'
 import { send } from '../shared-ui/use-extension'
 
-const START_COMMAND = 'npx @corsen-ai/universal-connector'
+// The daemon is distributed as source: run from the repository checkout (see the README's start).
+const START_COMMAND = 'pnpm connector'
+const GET_DAEMON_URL = 'https://github.com/CorsenAI/universal-ai-agent-chrome-connector#30-second-start'
 
 function PairingCard({ state }: { state: UiState }) {
   const [code, setCode] = useState('')
@@ -21,6 +23,9 @@ function PairingCard({ state }: { state: UiState }) {
     <Card title={t('pairTitle')} icon={<Plug size={14} />}>
       <p className="mb-2 text-[12px] text-ink-400">{t('pairHelp')}</p>
       <CopyField label={t('startDaemon')} value={START_COMMAND} />
+      <a className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] text-brand-2 hover:underline" href={GET_DAEMON_URL} target="_blank" rel="noreferrer">
+        <ExternalLink size={12} /> {t('getDaemon')}
+      </a>
       <div className="mt-2 flex gap-1.5">
         <input
           aria-label="Pairing code"

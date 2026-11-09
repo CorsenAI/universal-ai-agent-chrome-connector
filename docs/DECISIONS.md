@@ -155,3 +155,41 @@ derived from the 128) and, for the listing, the Store icon with the wordmark (`s
 the one the company's other connectors use). The dashboard shows the mark (`logo.png`); promotional
 tiles are rendered from the mark. Package icons are full-bleed like the other connectors' — the
 listing's Store icon is uploaded separately, so D-017's padding no longer applies.
+
+## D-019 — The answer survives a document replaced on submit; no answer fails fast (2026-11-09)
+
+Chat sites commonly open a conversation URL on the first message, replacing the document, and with it
+the isolated world the probe runs in and anything that world remembered. Decisions:
+
+- `IsolatedWorlds` creates the world again on the current document whenever the cached context is
+  gone (main-frame navigation, destroyed or cleared contexts, `Cannot find context`, a detached
+  document) or a call stops answering, and retries (five attempts, 15 s per call by default) instead
+  of failing or hanging the request. Every function run there only reads the page, so running it
+  again is safe; the visual picker, which waits up to 60 s for the user, gets a 75 s limit. An
+  exception thrown by the page function itself is reported, never retried.
+- The probe keeps no state in the page: `prepare` returns the baseline (matches per response selector
+  before the prompt) and the service worker passes it to every `poll`. An answer is new when a
+  selector matches more elements than before, so a replaced document that shows earlier messages (a
+  greeting, the conversation so far) is never read as the reply.
+- Once the stop control is gone, an answer that still matched no response element fails after eight
+  seconds with `HARNESS_FAILED` and the reason (recalibrate the site), instead of an empty answer at the
+  ten-minute deadline.
+- Signed out, chatgpt.com serves a different application (plain `<textarea>`, one composer button that
+  becomes "Stop generating", answers in `li[data-message-role="assistant"]`); the ChatGPT definition
+  carries those selectors after the signed-in ones.
+
+The real-browser suite covers the replaced document with a greeting (`chat.html?nav=1`), which the
+previous implementation answered wrongly, and the unmatched answer; unit tests replay lost, hanging
+and failing contexts.
+
+## D-020 — Distribution: extension from the Chrome Web Store, daemon from GitHub (2026-11-09)
+
+The extension is published on the Chrome Web Store; the daemon is published as source on GitHub
+(`github.com/CorsenAI/universal-ai-agent-chrome-connector`), not on npm. Decisions: the README, the
+daemon's help, start banner and dashboard, the side panel and the Store texts explain "install the
+extension from the Store, clone and build the repository, run `pnpm connector`". The root script
+`connector` runs the built CLI with any arguments; the CLI recognises it (`npm_lifecycle_event`, set by
+pnpm to the script name) and prints its hints as `pnpm connector …`, otherwise as
+`universal-connector …`. Loading the build unpacked stays documented for development. The daemon
+accepts any extension origin (`chrome-extension://` + 32 letters a–p) and authenticates it by the HMAC
+pairing, so the Store build pairs like the unpacked one.

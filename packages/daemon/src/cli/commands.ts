@@ -9,6 +9,7 @@ import { createLogger } from '../util/logger'
 import { openUrl } from '../util/open-url'
 import { HELP, type CliArgs } from './args'
 import { bold, cyan, dim, green, maskToken, red, startBanner, yellow } from './banner'
+import { cliName } from './cli-name'
 
 const out = (line = ''): void => {
   process.stdout.write(`${line}\n`)
@@ -55,7 +56,7 @@ export async function cmdStart(args: CliArgs): Promise<void> {
     onStopped: () => process.exit(0),
   })
   const info = handle.ctx.info()
-  out(startBanner({ port, dashboardUrl: info.dashboardUrl, pairingSecret: handle.ctx.pairingSecret, apiToken: handle.ctx.apiToken, showToken: args.show }))
+  out(startBanner({ port, dashboardUrl: info.dashboardUrl, pairingSecret: handle.ctx.pairingSecret, apiToken: handle.ctx.apiToken, showToken: args.show, cli: cliName() }))
   if (args.allowHosts.length > 0) out(yellow(`  ⚠ Extra Host values accepted: ${args.allowHosts.join(', ')} — anyone reaching them still needs the API key.`))
   if (args.open) openUrl(info.dashboardUrl)
   process.on('SIGHUP', () => handle.reloadCredentials())
@@ -127,7 +128,7 @@ export async function cmdSetup(args: CliArgs): Promise<void> {
     }
   }
   out()
-  out(`Start the daemon with ${cyan('universal-connector')} (agents also start it on demand), then pair the extension from the dashboard.`)
+  out(`Start the daemon with ${cyan(cliName())} (agents also start it on demand), then pair the extension from the dashboard.`)
 }
 
 export async function cmdUnlink(args: CliArgs): Promise<void> {
@@ -166,7 +167,7 @@ export async function cmdStatus(args: CliArgs): Promise<void> {
     out(`${red('●')} Port ${port} is used by another program`)
   } else {
     const pid = readPidFile(connectorPaths(home).pid)
-    out(`${red('●')} Daemon not running${pid !== null ? ` (stale pid file ${pid})` : ''} — start it with ${cyan('universal-connector')}`)
+    out(`${red('●')} Daemon not running${pid !== null ? ` (stale pid file ${pid})` : ''} — start it with ${cyan(cliName())}`)
   }
   out()
   agents.forEach((agent, index) => out(agentLine(agent, index)))
@@ -186,7 +187,7 @@ export async function cmdToken(args: CliArgs): Promise<void> {
         // daemon not running
       }
     }
-    out(`${green('✔')} New credentials generated. Re-pair the extension and re-run ${cyan('universal-connector setup')} for agents using HTTP.`)
+    out(`${green('✔')} New credentials generated. Re-pair the extension and re-run ${cyan(`${cliName()} setup`)} for agents using HTTP.`)
     out(`  Pairing code: ${bold(formatPairingCode(credentials.pairingSecret))}`)
     out(`  API key:      ${credentials.apiToken}`)
     if (process.platform === 'win32') out(dim('  Restart the daemon to apply them.'))
@@ -203,7 +204,7 @@ export async function cmdDashboard(args: CliArgs): Promise<void> {
   const port = resolvePort(args.port)
   const credentials = readCredentials(connectorPaths(connectorHome()).credentials)
   const probe = await probeDaemon(port)
-  if (credentials === null || probe.kind !== 'ours') throw new Error(`the daemon is not running on port ${port}; start it with \`universal-connector\``)
+  if (credentials === null || probe.kind !== 'ours') throw new Error(`the daemon is not running on port ${port}; start it with \`${cliName()}\``)
   const login = await adminPost(port, credentials.apiToken, '/api/admin/login-code')
   if (typeof login?.['url'] !== 'string') throw new Error('the daemon refused to create a login link')
   out(`Dashboard: ${login['url']}`)

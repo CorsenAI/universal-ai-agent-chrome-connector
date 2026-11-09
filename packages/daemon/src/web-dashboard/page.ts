@@ -46,7 +46,7 @@ export function dashboardPage(options: { pairingSecret: string; port: number }):
     <h2 id="h-pair">1 · Pair your browser</h2>
     <p class="muted" id="pair-status">Waiting for the extension…</p>
     <ol class="steps">
-      <li>Install the Chrome extension (<code>packages/extension/dist</code> → <em>Load unpacked</em>).</li>
+      <li>Install <strong>Universal AI Agent Connector — by Corsen AI</strong> from the Chrome Web Store (developers: <em>Load unpacked</em> → <code>packages/extension/dist</code>).</li>
       <li>On <strong>this tab</strong>, click the Corsen icon in the toolbar, then <strong>⚡ Pair</strong>. Done.</li>
     </ol>
     <details><summary>Manual pairing code</summary><p class="code-row"><code id="pairing-code" class="secret">••••-••••-••••-••••-••••</code><button type="button" data-reveal="pairing-code">Show</button><button type="button" data-copy="pairing-code">Copy</button></p></details>
@@ -80,7 +80,7 @@ export function dashboardPage(options: { pairingSecret: string; port: number }):
     <ol id="activity" class="activity" aria-live="polite"></ol>
   </section>
 </main>
-<footer class="foot">Unofficial community project · Local only · No telemetry · <a href="https://github.com/CorsenAI" rel="noreferrer">Corsen AI</a></footer>
+<footer class="foot">Unofficial community project · Local only · No telemetry · <a href="https://github.com/CorsenAI/universal-ai-agent-chrome-connector" rel="noreferrer">Source and issues on GitHub</a> · Corsen AI</footer>
 <script src="/assets/dashboard.js" type="module"></script>
 </body>
 </html>`
@@ -92,7 +92,7 @@ export function loginPage(options: { error?: string | undefined }): string {
 <main class="card narrow">
   <img src="/assets/logo.png" alt="" width="48" height="48">
   <h1>Corsen Connector</h1>
-  <p class="muted">Open the dashboard from your terminal with <code>npx @corsen-ai/universal-connector dashboard</code>, which opens a one-time link, or paste the API key printed by <code>npx @corsen-ai/universal-connector token --show</code>.</p>
+  <p class="muted">Open the dashboard from your terminal with <code>universal-connector dashboard</code> (from the repository checkout: <code>pnpm connector dashboard</code>), which opens a one-time link, or paste the API key printed by <code>universal-connector token --show</code>.</p>
   ${options.error !== undefined ? `<p class="error" role="alert">${escapeHtml(options.error)}</p>` : ''}
   <form method="post" action="/login">
     <label for="token">API key</label>

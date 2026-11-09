@@ -21,8 +21,11 @@ export interface CliArgs {
 }
 
 export const HELP = `Universal AI Agent Chrome Connector — by Corsen AI
+Source, documentation and issues: https://github.com/CorsenAI/universal-ai-agent-chrome-connector
 
 Usage: universal-connector [command] [options]
+       From the repository checkout: pnpm connector [command] [options]
+       The extension installs from the Chrome Web Store: Universal AI Agent Connector — by Corsen AI
 
 Commands
   start               Start the local daemon (default) and open the dashboard

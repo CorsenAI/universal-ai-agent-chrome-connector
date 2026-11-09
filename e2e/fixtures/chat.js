@@ -1,6 +1,11 @@
 // A fake chat that streams an answer word by word, like a real web LLM UI.
+// With `?nav=1`, the first message of a conversation replaces the document (a navigation to a
+// conversation URL), the way many real chat sites open a new conversation: the answer then streams
+// in the new document.
 const prompt = document.getElementById('prompt')
 const messages = document.getElementById('messages')
+const query = new URLSearchParams(location.search)
+const NAVIGATES_ON_FIRST_MESSAGE = query.has('nav') && !query.has('c')
 let stopped = false
 
 function answerFor(text) {
@@ -37,6 +42,15 @@ async function submit() {
   const text = prompt.value
   if (!text.trim()) return
   prompt.value = ''
+  if (NAVIGATES_ON_FIRST_MESSAGE) {
+    sessionStorage.setItem('pending-message', text)
+    location.assign(`${location.pathname}?nav=1&c=${Date.now()}`)
+    return
+  }
+  await answer(text)
+}
+
+async function answer(text) {
   stopped = false
   const user = document.createElement('div')
   user.className = 'user'
@@ -80,3 +94,17 @@ prompt.addEventListener('keydown', (event) => {
 })
 document.getElementById('send').addEventListener('click', () => void submit())
 document.getElementById('stop').addEventListener('click', () => { stopped = true })
+
+// In that mode both documents open with an assistant greeting, as many chat sites do: an answer that
+// already existed before the prompt, which a reader that lost its baseline would take for the reply.
+if (query.has('nav')) {
+  const greeting = element('div', { class: 'answer' }, element('p', {}, 'Hello! Ask me anything.'))
+  messages.append(greeting)
+}
+
+// The conversation document: answer the message carried over the navigation.
+const pending = sessionStorage.getItem('pending-message')
+if (pending !== null && query.has('c')) {
+  sessionStorage.removeItem('pending-message')
+  setTimeout(() => void answer(pending), 300)
+}

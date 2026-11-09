@@ -343,7 +343,8 @@ export class Controller {
     await chrome.tabs.update(tabId, { active: true })
     await this.debugger.ensure(tabId, 'brain')
     try {
-      const pick = await this.worlds.call(tabId, corsenPick, [{ kind, label: PICK_LABELS[kind], timeoutMs: 60_000 }])
+      // The picker waits up to 60 s for the user's click: the call gets a longer limit than reads.
+      const pick = await this.worlds.call(tabId, corsenPick, [{ kind, label: PICK_LABELS[kind], timeoutMs: 60_000 }], { timeoutMs: 75_000 })
       if (pick === null) throw new ConnectorError('CANCELLED', 'calibration cancelled')
       await setHarnessOverride(hostOf(tab.url ?? ''), { [kind]: pick.selector })
       this.schedulePush()

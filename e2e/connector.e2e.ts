@@ -273,6 +273,86 @@ describe('The Brain — a web chat as an OpenAI/Anthropic API', () => {
     expect(body.content[0]?.text).toContain('You sent 2 characters.')
     expect(body.stop_reason).toBe('end_turn')
   })
+
+  it('fails fast, with the reason, when the chat finished but no response selector matched', async () => {
+    const setResponseSelector = (selector: string): Promise<void> =>
+      browser.ui.evaluate(
+        async ({ host, selector }) => {
+          const bag = await chrome.storage.local.get('settings')
+          const settings = bag['settings'] as { harnessOverrides: Record<string, Record<string, unknown>> }
+          settings.harnessOverrides[host] = { ...settings.harnessOverrides[host], response: selector, updatedAt: Date.now() }
+          await chrome.storage.local.set({ settings })
+        },
+        { host: '127.0.0.1', selector },
+      )
+    const original = await browser.ui.evaluate(async (host) => {
+      const bag = await chrome.storage.local.get('settings')
+      const settings = bag['settings'] as { harnessOverrides: Record<string, { response?: string }> }
+      return settings.harnessOverrides[host]?.response ?? ''
+    }, '127.0.0.1')
+    expect(original).not.toBe('')
+    await setResponseSelector('.no-such-answer')
+    try {
+      const started = Date.now()
+      const response = await fetch(`http://127.0.0.1:${daemon.port}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${daemon.apiToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ model: 'web-generic', messages: [{ role: 'user', content: 'Hello again' }] }),
+      })
+      const body = (await response.json()) as { error?: { code?: string; message?: string } }
+      expect(response.ok).toBe(false)
+      expect(body.error?.code).toBe('HARNESS_FAILED')
+      expect(body.error?.message).toContain('no response element matched')
+      // The stop control of the fixture disappears within seconds; the driver must not wait for the deadline.
+      expect(Date.now() - started).toBeLessThan(20_000)
+    } finally {
+      await setResponseSelector(original)
+    }
+  })
+
+  it('recovers the answer when the chat replaces its document on the first message', async () => {
+    // Many chat sites open a conversation URL on the first message: the document, and with it the
+    // isolated world the probe runs in, is replaced while the answer streams. The fixture also opens
+    // both documents with an assistant greeting, which must not be taken for the reply.
+    const setNewChatUrl = (url: string): Promise<void> =>
+      browser.ui.evaluate(
+        async ({ host, url }) => {
+          const bag = await chrome.storage.local.get('settings')
+          const settings = bag['settings'] as { harnessOverrides: Record<string, Record<string, unknown>> }
+          settings.harnessOverrides[host] = { ...settings.harnessOverrides[host], newChatUrl: url, updatedAt: Date.now() }
+          await chrome.storage.local.set({ settings })
+        },
+        { host: '127.0.0.1', url },
+      )
+    await setNewChatUrl(`${fixtures.base}/chat.html?nav=1`)
+    try {
+      const started = Date.now()
+      const response = await fetch(`http://127.0.0.1:${daemon.port}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${daemon.apiToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ model: 'web-generic', stream: true, messages: [{ role: 'user', content: 'Navigate please' }] }),
+      })
+      const chunks = (await response.text())
+        .split('\n\n')
+        .filter((block) => block.startsWith('data: {'))
+        .map((block) => JSON.parse(block.slice(6)) as { choices: Array<{ delta?: { content?: string }; finish_reason?: string | null }>; error?: { message: string } })
+      const content = chunks.map((chunk) => chunk.choices?.[0]?.delta?.content ?? '').join('')
+      const outcome = {
+        error: chunks.find((chunk) => chunk.error !== undefined)?.error?.message ?? null,
+        finish: chunks.find((chunk) => chunk.choices?.[0]?.finish_reason)?.choices[0]?.finish_reason ?? null,
+        content,
+      }
+      expect(outcome).toEqual({ error: null, finish: 'stop', content: expect.stringContaining('You sent 15 characters.') })
+      expect(content).toContain('```js\nconst answer = 42\n```')
+      expect(content).toContain('Anything else?')
+      expect(content).not.toContain('Hello! Ask me anything.')
+      expect(Date.now() - started).toBeLessThan(30_000)
+      const url = await browser.ui.evaluate(async (id) => (await chrome.tabs.get(id)).url ?? '', chatTabId)
+      expect(url).toMatch(/\/chat\.html\?nav=1&c=\d+$/)
+    } finally {
+      await setNewChatUrl(`${fixtures.base}/chat.html`)
+    }
+  })
 })
 
 describe('Panic stop', () => {

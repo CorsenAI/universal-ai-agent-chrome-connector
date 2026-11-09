@@ -17,7 +17,7 @@
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3%20%C2%B7%20125%2B-4285F4)](packages/extension)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7%20strict-3178c6)](tsconfig.base.json)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A5%2022-339933)](packages/daemon)
-[![Tests](https://img.shields.io/badge/tests-134%20unit%20%2B%2019%20real--browser-22c55e)](#tests)
+[![Tests](https://img.shields.io/badge/tests-151%20unit%20%2B%2021%20real--browser-22c55e)](#tests)
 
 by **Corsen AI** · local only · no telemetry · unofficial community project
 
@@ -54,29 +54,37 @@ with a timestamped `.bak` and an **Unlink / Restore** button.
 
 ## 30-second start
 
-> The npm package is not published yet: run it from this repository. Once published,
-> `npx @corsen-ai/universal-connector` replaces the `node packages/daemon/dist/index.js` commands.
+Two parts: the **extension**, installed from the Chrome Web Store, and the **daemon**, a small Node.js
+program you run from this repository.
+
+**1. Install the extension.** In the Chrome Web Store, install **Universal AI Agent Connector — by
+Corsen AI**. (Developers: load `packages/extension/dist` unpacked after `pnpm build`, see
+[Development](#development).)
+
+**2. Run the daemon** (Node.js 22 or newer, [pnpm](https://pnpm.io)):
 
 ```bash
 git clone https://github.com/CorsenAI/universal-ai-agent-chrome-connector.git
 cd universal-ai-agent-chrome-connector
 pnpm install && pnpm build
+pnpm connector
 ```
+
+The daemon starts on `127.0.0.1:43110` and opens its **dashboard**. `pnpm connector <command>` runs
+any CLI command from the checkout (`pnpm connector dashboard`, `pnpm connector token --show`, …),
+and the hints the CLI prints use that form too.
+
+**3. Pair.** On the dashboard tab, click the Corsen icon → **⚡ Pair**. Done (the pairing survives
+restarts).
+
+**4. Connect your agents** — from the dashboard, the side panel, or the terminal:
 
 ```bash
-node packages/daemon/dist/index.js
+pnpm connector setup
 ```
 
-1. The daemon starts on `127.0.0.1:43110` and opens its **dashboard**.
-2. In Chrome: `chrome://extensions` → *Developer mode* → **Load unpacked** → `packages/extension/dist`.
-3. On the dashboard tab, click the Corsen icon → **⚡ Pair**. Done (the pairing survives restarts).
-4. Connect your agents — from the dashboard, the side panel, or the terminal:
-
-```bash
-node packages/daemon/dist/index.js setup
-```
-
-5. Open any page → Corsen icon → **🛠️ MCP**. Open a signed-in chat → **🧠 LLM**. Ask your agent.
+**5. Use it.** Open any page → Corsen icon → **🛠️ MCP**. Open a signed-in chat → **🧠 LLM**. Ask your
+agent.
 
 ---
 
@@ -251,7 +259,7 @@ report a vulnerability: [SECURITY.md](SECURITY.md).
 
 ## Reference
 
-**CLI** (`universal-connector`, alias `corsen-connector`): `start` (default) · `mcp` · `setup
+**CLI** (`universal-connector`, alias `corsen-connector`; from the repository checkout, `pnpm connector`): `start` (default) · `mcp` · `setup
 [--agent <id>] [--all] [--list]` · `unlink <agent>|--all` · `restore <agent>` · `status [--json]` ·
 `token [--show] [--rotate]` · `dashboard` · `stop`. Options: `--port`, `--no-open`, `--allow-host`,
 `--allow-origin`, `--log-level`.
@@ -273,14 +281,18 @@ Privacy policy: [docs/privacy/index.html](docs/privacy/index.html).
 ```bash
 pnpm install
 pnpm build        # shared (typecheck) → daemon (tsdown) → extension (Vite 8)
-pnpm test         # 134 unit + integration tests (vitest)
+pnpm connector    # run the built daemon CLI (any command: setup, status, token --show, stop…)
+pnpm test         # unit + integration tests (vitest)
 pnpm typecheck    # TypeScript 7, every package + e2e
-pnpm test:e2e     # real Chromium + built daemon + built extension (19 tests)
+pnpm test:e2e     # real Chromium + built daemon + built extension
 pnpm screenshots  # regenerate docs/assets from the real product
 pnpm package:extension  # Store zip from a clean commit → release/ (+ SHA-256)
 pnpm verify:extension   # read the zip back: byte-for-byte, allowlist, manifest, scripts
 pnpm store:assets       # Store screenshots, tiles and icon → store/
 ```
+
+To work on the extension itself, load the build instead of the Store version: `chrome://extensions` →
+*Developer mode* → **Load unpacked** → `packages/extension/dist`.
 
 ```
 packages/shared     Zod schemas: WebSocket protocol, MCP tool contracts, OpenAI/Anthropic, redaction
@@ -295,21 +307,23 @@ version, foreign origin), Host/Origin/CSRF guards, the tool shim at every stream
 and Anthropic wire formats, conversation continuity, the configurator on a temporary home (JSONC,
 symlinks, backups, the Claude CLI path), the official MCP client negotiating `2025-11-25` **and**
 `2026-07-28` over HTTP and stdio, the stdio proxy auto-starting the daemon, the distiller (secrets
-masked, refs never reused, code-block chrome of chat UIs ignored), and — in a real browser — trusted clicks on a page that ignores synthetic
+masked, refs never reused, code-block chrome of chat UIs ignored), the isolated world recreated when a
+page replaces its document, and — in a real browser — trusted clicks on a page that ignores synthetic
 ones, the DevTools feed, GraphQL capture, WebP screenshots, the visual picker, streaming chat
-completions and tool calls through a web chat, and panic stop.
+completions and tool calls through a web chat (including one that opens a new document on the first
+message), and panic stop.
 
 ---
 
 ## Known limitations
 
-- Built-in chat selectors are best-effort (2026-11) and were exercised on a fixture chat, not on
-  signed-in accounts; recalibrate with the picker if a site changes.
+- Built-in chat selectors are best-effort (2026-11): exercised on a fixture chat and on chatgpt.com
+  without an account, not on signed-in accounts; recalibrate with the picker if a site changes.
 - Images in prompts are replaced by a placeholder; `max_tokens` and sampling parameters are not
   enforced by web chats.
 - One active browser at a time (the newest paired browser takes over).
 - Verified on Linux (Chrome for Testing 156); macOS and Windows paths are implemented but not yet run.
-- Not yet on npm or the Chrome Web Store.
+- The daemon is distributed as source from this repository; there is no npm package yet.
 
 ## License
 

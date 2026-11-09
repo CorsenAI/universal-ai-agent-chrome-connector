@@ -75,11 +75,20 @@ export const HARNESSES: readonly LLMWebHarness[] = [
     label: 'ChatGPT',
     hosts: ['chatgpt.com', 'chat.openai.com'],
     newChatUrl: 'https://chatgpt.com/',
+    // Signed out, chatgpt.com serves a different application: a plain <textarea>, one composer
+    // button that turns into "Stop generating" (data-stop-generating) while the answer streams, and
+    // answers in li[data-message-role="assistant"] holding a [data-assistant-markdown-root]
+    // (observed 2026-11-09). Those selectors come after the signed-in ones.
     selectors: {
-      input: ['#prompt-textarea', 'div#prompt-textarea[contenteditable="true"]', 'textarea[name="prompt-textarea"]'],
-      send: ['button[data-testid="send-button"]', '#composer-submit-button'],
-      stop: ['button[data-testid="stop-button"]', 'button[aria-label*="stop" i]'],
-      response: ['[data-message-author-role="assistant"] .markdown', '[data-message-author-role="assistant"]'],
+      input: ['#prompt-textarea', 'div#prompt-textarea[contenteditable="true"]', 'textarea[name="prompt-textarea"]', 'textarea#mobile-composer-prompt'],
+      send: ['button[data-testid="send-button"]', '#composer-submit-button', 'button[data-composer-submit]'],
+      stop: ['button[data-testid="stop-button"]', 'button[data-composer-submit][data-stop-generating]', 'button[aria-label*="stop" i]'],
+      response: [
+        '[data-message-author-role="assistant"] .markdown',
+        '[data-message-author-role="assistant"]',
+        'li[data-message-role="assistant"] [data-assistant-markdown-root]',
+        'li[data-message-role="assistant"]',
+      ],
       exclude: ['[class*="reasoning" i]', '[class*="thinking" i]'],
     },
     submit: 'enter',
