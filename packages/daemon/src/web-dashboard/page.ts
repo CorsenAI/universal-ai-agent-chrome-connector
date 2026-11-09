@@ -92,7 +92,7 @@ export function loginPage(options: { error?: string | undefined }): string {
 <main class="card narrow">
   <img src="/assets/logo.png" alt="" width="48" height="48">
   <h1>Corsen Connector</h1>
-  <p class="muted">Open the dashboard from your terminal with <code>npx @corsen-ai/universal-connector dashboard</code>, or paste the API key it prints.</p>
+  <p class="muted">Open the dashboard from your terminal with <code>npx @corsen-ai/universal-connector dashboard</code>, which opens a one-time link, or paste the API key printed by <code>npx @corsen-ai/universal-connector token --show</code>.</p>
   ${options.error !== undefined ? `<p class="error" role="alert">${escapeHtml(options.error)}</p>` : ''}
   <form method="post" action="/login">
     <label for="token">API key</label>

@@ -68,7 +68,7 @@ export function apiGuard(options: GuardOptions): MiddlewareHandler {
       return deny(c, 403, 'forbidden_origin', 'Requests from web pages are refused. Call this API from a local program.')
     }
     if (!secretsMatch(extractApiToken(c), options.apiToken())) {
-      return deny(c, 401, 'authentication_error', 'Missing or invalid API key. Use the token shown by `universal-connector token` or in the dashboard.')
+      return deny(c, 401, 'authentication_error', 'Missing or invalid API key. Use the key printed by `universal-connector token --show` or shown in the dashboard.')
     }
     if (c.req.method === 'POST') {
       const type = (c.req.header('content-type') ?? '').toLowerCase()
