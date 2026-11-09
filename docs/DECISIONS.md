@@ -193,3 +193,13 @@ pnpm to the script name) and prints its hints as `pnpm connector …`, otherwise
 `universal-connector …`. Loading the build unpacked stays documented for development. The daemon
 accepts any extension origin (`chrome-extension://` + 32 letters a–p) and authenticates it by the HMAC
 pairing, so the Store build pairs like the unpacked one.
+
+## D-021 — Store description without brand lists (2026-11-09)
+
+The first submission was rejected for keyword spam: the description listed seven supported agents and,
+in the disclaimer, ten companies. The Chrome Web Store spam policy allows at most five named sites or
+brands in a description and recommends keeping any keyword under five occurrences; a longer list
+belongs behind a link or in a screenshot (developer.chrome.com/docs/webstore/program-policies/spam-faq).
+Decision: both descriptions name no agent or company (the supported clients are listed in the README,
+which the description links to), the disclaimer is generic, and no keyword appears more than five
+times. The screenshots keep showing the agents list, as the policy suggests.
