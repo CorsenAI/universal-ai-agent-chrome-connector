@@ -15,7 +15,7 @@ What the listing needs and where each item lives. A "done" is backed by a comman
 | Frozen permission set, no host permissions | done | D-005; enforced by `scripts/verify-extension-zip.mjs` |
 | Extension pages reach no host but the daemon (`img-src 'self' data:`, loopback-only `connect-src`) | done | manifest CSP, D-022; enforced by `scripts/verify-extension-zip.mjs` |
 | License notices of the bundled packages | done | `THIRD_PARTY_LICENSES.txt`, generated at build (D-022) |
-| ZIP from a clean commit, reproducible, SHA-256 recorded | done | `pnpm package:extension` → `release/` (D-015); attached to the GitHub release of the same version (`v0.1.0`; `v0.1.1` with its submission) |
+| ZIP from a clean commit, reproducible, SHA-256 recorded | done | `pnpm package:extension` → `release/` (D-015); attached to the GitHub release of the same version (`v0.1.0`, `v0.1.1`); rebuilt from a fresh clone of the tag, the file is identical |
 | ZIP read back independently, byte for byte with the build | done | `pnpm verify:extension` |
 | Unpacked ZIP passes the real-browser suite | done | `EXTENSION_DIR=<unzipped> pnpm test:e2e` |
 
