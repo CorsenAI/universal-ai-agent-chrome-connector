@@ -43,7 +43,7 @@ connectors ship it, `icon-32.png` being derived from the 128-pixel file (D-018).
 | `store-icon-128.png` | 128×128 | 15492 | `50d498c65573e7fa74b638858dd300f685d5bfdbd20ad346a807a2d2cc14ebbf` |
 | `screenshots/01-connect.png` | 1280×800 | 238587 | `92404c95028c8b6dba1c66da0483aeadd387ef754b0ba43fe303d026a2c32553` |
 | `screenshots/02-tab-roles.png` | 1280×800 | 116170 | `f206956c4091386206c19b13a451b7be81e7b9bf88ef9c8b1373158716b4da80` |
-| `screenshots/03-agent-view.png` | 1280×800 | 128781 | `5742490c34272b59b10838415d9560b9f165990aa0209bbd8c24573da07ecf78` |
+| `screenshots/03-agent-view.png` | 1280×800 | 126652 | `003ff0215d3a3b5bd2f74660241fd76e97930013ddf1eae1f84773d2821e681b` |
 | `promo-small-440x280.png` | 440×280 | 83520 | `90e2fe3d84dbd551b40682f819b5084155708a9680e714022e1ea72a59035cda` |
 | `promo-marquee-1400x560.png` | 1400×560 | 319170 | `e695008808f6afb605c9ff4953832390fbec0ab9d1f9a1a40b5dff6a54c57212` |
 | `brand/corsen-mark.png` | 344×373 | 146349 | `dc328f34079643ad2ff76ebd98aeab5299ac9d20dc6305ffd7b953164a191854` |
