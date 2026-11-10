@@ -58,8 +58,13 @@ describe('packaged extension hygiene', () => {
       expect(code, file).not.toMatch(/new\s+Function\s*\(|\beval\s*\(/)
       expect(code, file).not.toMatch(/<script[^>]+src=["']https?:/i)
     }
-    const manifest = JSON.parse(readFileSync(join(EXTENSION_DIST, 'manifest.json'), 'utf8')) as { manifest_version: number; permissions: string[]; host_permissions?: string[]; content_scripts?: unknown }
+    const manifest = JSON.parse(readFileSync(join(EXTENSION_DIST, 'manifest.json'), 'utf8')) as { manifest_version: number; permissions: string[]; host_permissions?: string[]; content_scripts?: unknown; content_security_policy: { extension_pages: string } }
     expect(manifest.manifest_version).toBe(3)
+    // Extension pages load images only from the package or inline (no request to any website).
+    expect(manifest.content_security_policy.extension_pages).toContain("img-src 'self' data:;")
+    // Every bundled third-party package ships its license notice.
+    const notices = readFileSync(join(EXTENSION_DIST, 'THIRD_PARTY_LICENSES.txt'), 'utf8')
+    for (const name of ['react', 'react-dom', 'scheduler', 'zod', 'lucide-react']) expect(notices).toMatch(new RegExp(`^${name} \\S+ — (MIT|ISC)$`, 'm'))
     expect(manifest.permissions.sort()).toEqual(['activeTab', 'alarms', 'debugger', 'scripting', 'sidePanel', 'storage', 'tabs'])
     expect(manifest.host_permissions).toBeUndefined()
     expect(manifest.content_scripts).toBeUndefined()

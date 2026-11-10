@@ -73,6 +73,11 @@ const en = {
   networkErrors: '{n} network',
   activeTab: 'This tab',
   errorPrefix: 'Error',
+  calibrated: '✓ calibrated',
+  chatSite: 'chat: {id}',
+  panicDone: '✓ {n} debugger session(s) detached',
+  tokensShort: '{n} tok',
+  noPairingCode: 'No pairing code on this page. Open the dashboard with `pnpm connector dashboard` from the repository folder, then click Pair on that tab.',
 } as const
 
 type Key = keyof typeof en
@@ -150,6 +155,11 @@ const fr: Record<Key, string> = {
   networkErrors: '{n} réseau',
   activeTab: 'Cet onglet',
   errorPrefix: 'Erreur',
+  calibrated: '✓ calibré',
+  chatSite: 'chat : {id}',
+  panicDone: '✓ {n} session(s) debugger détachée(s)',
+  tokensShort: '{n} jetons',
+  noPairingCode: "Aucun code d'appairage sur cette page. Ouvrez le tableau de bord avec `pnpm connector dashboard` depuis le dossier du dépôt, puis cliquez sur Appairer sur cet onglet.",
 }
 
 const language = (typeof chrome !== 'undefined' && chrome.i18n?.getUILanguage?.()) || 'en'

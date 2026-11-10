@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { Client } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { readCredentials } from '../src/auth/credentials'
+import { loadOrCreateCredentials, readCredentials, rotateCredentials } from '../src/auth/credentials'
 import { connectorPaths } from '../src/config/paths'
 import { probeDaemon } from '../src/daemon/lifecycle'
 import { runDaemon, type DaemonHandle } from '../src/daemon/run-daemon'
@@ -66,6 +66,40 @@ describe('MCP stdio proxy (built artifact)', () => {
       await client.close()
     })
   }
+
+  it('reads the API key again after `token --rotate` instead of failing until the agent restarts', async () => {
+    const transport = new StdioClientTransport({ command: process.execPath, args: [entry, 'mcp'], env: stdioEnv(home.path, port), stderr: 'pipe' })
+    const client = new Client({ name: 'rotate-test', version: '1.0.0' })
+    await client.connect(transport)
+    expect(JSON.stringify((await client.callTool({ name: 'browser_list_targets', arguments: {} })).content)).toContain('target_id 3: Jira')
+    const before = readCredentials(connectorPaths(home.path).credentials)!.apiToken
+    rotateCredentials(connectorPaths(home.path).credentials)
+    daemon.reloadCredentials()
+    expect(readCredentials(connectorPaths(home.path).credentials)!.apiToken).not.toBe(before)
+    const after = await client.callTool({ name: 'browser_list_targets', arguments: {} })
+    expect(after.isError).not.toBe(true)
+    expect(JSON.stringify(after.content)).toContain('target_id 3: Jira')
+    await client.close()
+  })
+
+  it('explains a daemon started with other credentials instead of calling it unreachable', async () => {
+    const other = tempDir('stdio-other-home')
+    try {
+      loadOrCreateCredentials(connectorPaths(other.path).credentials)
+      const transport = new StdioClientTransport({ command: process.execPath, args: [entry, 'mcp'], env: stdioEnv(other.path, port), stderr: 'pipe' })
+      const client = new Client({ name: 'other-home-test', version: '1.0.0' })
+      await client.connect(transport)
+      const result = await client.callTool({ name: 'browser_list_targets', arguments: {} })
+      expect(result.isError).toBe(true)
+      const text = JSON.stringify(result.content)
+      expect(text).toContain('UNAUTHENTICATED')
+      expect(text).toContain('other credentials')
+      expect(text).not.toContain('unreachable')
+      await client.close()
+    } finally {
+      other.cleanup()
+    }
+  })
 })
 
 describe('daemon auto-start from the stdio proxy', () => {

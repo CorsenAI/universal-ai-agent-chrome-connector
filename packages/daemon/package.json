@@ -1,6 +1,6 @@
 {
   "name": "@corsen-ai/universal-connector",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Universal AI Agent Chrome Connector — by Corsen AI. Local daemon: web-chat tabs as an OpenAI/Anthropic-compatible API, whitelisted tabs as an MCP server, 1-click agent onboarding.",
   "license": "Apache-2.0",
   "author": "Corsen AI",

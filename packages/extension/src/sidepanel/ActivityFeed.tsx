@@ -12,7 +12,7 @@ export function ActivityFeed({ state }: { state: UiState }) {
   const panic = async (): Promise<void> => {
     if (!confirm(t('panicConfirm'))) return
     const response = await send<{ detached: number }>({ type: 'panic' })
-    setPanicResult(response.ok ? `✓ ${response.result.detached} session(s) detached` : response.error.message)
+    setPanicResult(response.ok ? t('panicDone', { n: response.result.detached }) : response.error.message)
   }
   const { totals } = state
   return (
@@ -48,7 +48,7 @@ export function ActivityFeed({ state }: { state: UiState }) {
                   {entry.title}
                   <span className="text-ink-500">
                     {entry.durationMs !== undefined ? ` · ${entry.durationMs} ms` : ''}
-                    {entry.tokensSaved !== undefined ? ` · −${entry.tokensSaved.toLocaleString()} tok` : ''}
+                    {entry.tokensSaved !== undefined ? ` · −${t('tokensShort', { n: entry.tokensSaved.toLocaleString() })}` : ''}
                     {entry.model !== undefined ? ` · ${entry.model}` : ''}
                   </span>
                 </span>

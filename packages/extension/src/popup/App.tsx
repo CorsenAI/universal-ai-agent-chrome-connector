@@ -54,7 +54,7 @@ export function App() {
       const [injection] = await chrome.scripting.executeScript({ target: { tabId: tab.tabId }, func: readDashboardPairing })
       const result = injection?.result as { code: string | null; port: number } | undefined
       if (result?.code === null || result?.code === undefined) {
-        setError('No pairing code on this page: open the dashboard from `universal-connector dashboard` (signed-in page).')
+        setError(t('noPairingCode'))
         return
       }
       const response = await send({ type: 'setPairing', code: result.code, ...(result.port > 0 ? { port: result.port } : {}) })

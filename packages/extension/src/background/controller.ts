@@ -28,6 +28,7 @@ import { RefRegistry } from '../mcp-executor/refs'
 import { screenshot } from '../mcp-executor/screenshot'
 import type { UiRequest, UiResponse, UiState, UiTab } from '../messages'
 import { DaemonLink } from './daemon-link'
+import { localFavicon } from './favicon'
 import { getSettings, loadRoles, patchSettings, saveRoles, setFlags, setHarnessOverride, type RoleRecord } from './storage'
 
 const PICK_LABELS = { input: 'prompt input box', send: 'send button', stop: 'stop button', response: 'answer of the assistant (any previous answer)' } as const
@@ -282,7 +283,7 @@ export class Controller {
         title: tab.title ?? '',
         url,
         host: hostOf(url),
-        favIconUrl: tab.favIconUrl?.startsWith('https://') === true || tab.favIconUrl?.startsWith('data:image/') === true ? tab.favIconUrl : '',
+        favIconUrl: localFavicon(tab.favIconUrl),
         role: this.roleOf(tab.id),
         harnessId: detectHarness(url, settings.harnessOverrides),
         restricted: isRestrictedUrl(url),

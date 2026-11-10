@@ -48,7 +48,7 @@ function TabRow({ tab, calibration }: { tab: UiTab; calibration: boolean }) {
           </p>
           <p className="truncate text-[11px] text-ink-400" title={tab.url}>
             {tab.host}
-            {tab.harnessId !== null && tab.role !== 'mcp' && ` · chat: ${tab.harnessId}`}
+            {tab.harnessId !== null && tab.role !== 'mcp' && ` · ${t('chatSite', { id: tab.harnessId })}`}
             {tab.busy && ` · ${t('generating')}`}
             {tab.role === 'mcp' && ` · ${t('consoleErrors', { n: tab.consoleErrors })} · ${t('networkErrors', { n: tab.networkErrors })}`}
           </p>
@@ -63,7 +63,7 @@ function TabRow({ tab, calibration }: { tab: UiTab; calibration: boolean }) {
         )}
       </div>
       {tab.restricted && <p className="mt-1 text-[11px] text-ink-500">{t('restricted')}</p>}
-      {calibration && <p className="mt-1 text-[11px] text-indigo-200">✓ calibrated</p>}
+      {calibration && <p className="mt-1 text-[11px] text-indigo-200">{t('calibrated')}</p>}
       {open && <Calibration tab={tab} onError={setError} />}
       <ErrorNote message={error} />
     </li>

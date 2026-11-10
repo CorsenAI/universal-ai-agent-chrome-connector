@@ -34,8 +34,19 @@ export function xdgConfigDir(ctx: PlatformContext): string {
   return nonEmpty(ctx.env['XDG_CONFIG_HOME']) ?? joinFor(ctx)(ctx.home, '.config')
 }
 
+/**
+ * Claude Code's directory and its own state file, which holds the user-scope MCP servers. Both move
+ * into `CLAUDE_CONFIG_DIR` when that variable is set ("every ~/.claude path … lives under that
+ * directory instead. The same applies to .claude.json", code.claude.com/docs/en/claude-directory),
+ * and the `claude` CLI the configurator runs inherits the same environment.
+ */
+export function claudeCodeDir(ctx: PlatformContext): string {
+  return nonEmpty(ctx.env['CLAUDE_CONFIG_DIR']) ?? joinFor(ctx)(ctx.home, '.claude')
+}
+
 export function claudeCodeConfig(ctx: PlatformContext): string {
-  return joinFor(ctx)(ctx.home, '.claude.json')
+  const configDir = nonEmpty(ctx.env['CLAUDE_CONFIG_DIR'])
+  return configDir !== undefined ? joinFor(ctx)(configDir, '.claude.json') : joinFor(ctx)(ctx.home, '.claude.json')
 }
 
 export function claudeDesktopConfig(ctx: PlatformContext): string {

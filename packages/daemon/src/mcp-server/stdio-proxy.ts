@@ -6,6 +6,14 @@ import type { Logger } from '../util/logger'
 import type { ToolCallResult } from './executor'
 import { createMcpServerFactory } from './factory'
 
+/** The daemon answered 401: this proxy's API key is not the daemon's (rotated, or another home). */
+export class DaemonAuthError extends Error {
+  constructor() {
+    super('the connector daemon refused the API key')
+    this.name = 'DaemonAuthError'
+  }
+}
+
 /** HTTP client the stdio proxy uses to reach the daemon's tool executor. */
 export class DaemonClient {
   readonly #base: string
@@ -24,6 +32,7 @@ export class DaemonClient {
       body: JSON.stringify({ name, arguments: args ?? {} }),
       signal: signal === undefined ? timeout : AbortSignal.any([signal, timeout]),
     })
+    if (response.status === 401) throw new DaemonAuthError()
     const body = (await response.json().catch(() => null)) as ToolCallResult | { error?: { message?: string } } | null
     if (response.ok && body !== null && 'content' in body) return body
     const message = body !== null && 'error' in body ? (body.error?.message ?? `HTTP ${response.status}`) : `HTTP ${response.status}`
@@ -41,7 +50,8 @@ export interface StdioOptions {
 /**
  * `universal-connector mcp`: an MCP stdio server (both protocol eras) whose tools forward to the
  * long-lived daemon (D-002). It starts the daemon when none answers, and retries once if the daemon
- * went away between calls. Stdout carries only MCP frames; logs go to stderr.
+ * went away between calls or refused the API key (credentials are read again: `token --rotate`
+ * replaces them while agent sessions keep running). Stdout carries only MCP frames; logs go to stderr.
  */
 export async function runStdioProxy(options: StdioOptions): Promise<void> {
   const paths = connectorPaths(options.home)
@@ -62,6 +72,10 @@ export async function runStdioProxy(options: StdioOptions): Promise<void> {
       } catch (error) {
         client = null
         if (attempt === 1 || signal?.aborted === true) {
+          if (error instanceof DaemonAuthError) {
+            const text = `UNAUTHENTICATED: the connector daemon on port ${options.port} does not accept the API key in ${paths.credentials}. It was started with other credentials (another CORSEN_CONNECTOR_HOME): restart it from this home, or point CORSEN_CONNECTOR_HOME and CORSEN_CONNECTOR_PORT at the daemon you use.`
+            return { content: [{ type: 'text', text }], isError: true }
+          }
           return { content: [{ type: 'text', text: `NO_BROWSER: the connector daemon is unreachable (${(error as Error).message}).` }], isError: true }
         }
       }

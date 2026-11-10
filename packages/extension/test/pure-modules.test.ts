@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type Protocol from 'devtools-protocol'
+import { localFavicon } from '../src/background/favicon'
 import { parseKeyCombo, selectAllStroke } from '../src/cdp/keys'
 import { detectHarness, resolveHarness } from '../src/harnesses/registry'
 import { BlockStreamCommitter, stablePrefix } from '../src/harnesses/stream-committer'
@@ -118,5 +119,17 @@ describe('accessibility tree formatter', () => {
     const result = formatAxTree(nodes, () => 'e1', 60)
     expect(result.truncated).toBe(true)
     expect(result.text).toContain('truncated')
+  })
+})
+
+describe('side panel favicons', () => {
+  it('keeps inline icons and drops anything that would be a network request', () => {
+    expect(localFavicon('data:image/png;base64,iVBORw0KGgo=')).toBe('data:image/png;base64,iVBORw0KGgo=')
+    expect(localFavicon('https://example.com/favicon.ico')).toBe('')
+    expect(localFavicon('http://intranet.local/favicon.ico')).toBe('')
+    expect(localFavicon('chrome://favicon/https://example.com')).toBe('')
+    expect(localFavicon('javascript:alert(1)')).toBe('')
+    expect(localFavicon('')).toBe('')
+    expect(localFavicon(undefined)).toBe('')
   })
 })

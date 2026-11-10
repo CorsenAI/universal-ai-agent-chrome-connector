@@ -2,7 +2,7 @@ import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client'
 import { afterAll, beforeAll, describe, it } from 'vitest'
-import { ROOT, launchBrowser, startDaemon, startFixtureServer, waitFor, type BrowserHandle, type DaemonProcess } from './helpers'
+import { ROOT, assertNoLocalPaths, launchBrowser, startDaemon, startFixtureServer, waitFor, type BrowserHandle, type DaemonProcess } from './helpers'
 
 /**
  * Real-product screenshots (opt-in: `pnpm screenshots`). Everything shown is produced by the built
@@ -67,12 +67,15 @@ describe.skipIf(process.env['CAPTURE'] === undefined)('screenshots', () => {
     await panel.setViewportSize({ width: 420, height: 860 })
     await panel.reload()
     await panel.waitForTimeout(1_200)
+    await assertNoLocalPaths(panel, 'side panel (Quick Connect)')
     await panel.screenshot({ path: join(OUT, 'sidepanel-quick-connect.png') })
     await panel.getByRole('tab', { name: /Tabs|Onglets/ }).click()
     await panel.waitForTimeout(400)
+    await assertNoLocalPaths(panel, 'side panel (Tabs)')
     await panel.screenshot({ path: join(OUT, 'sidepanel-tabs.png') })
     await panel.getByRole('tab', { name: /activity|Activité/i }).click()
     await panel.waitForTimeout(400)
+    await assertNoLocalPaths(panel, 'side panel (activity)')
     await panel.screenshot({ path: join(OUT, 'sidepanel-activity.png') })
 
     const login = (await (await fetch(`http://127.0.0.1:${daemon.port}/api/admin/login-code`, { method: 'POST', headers: { authorization: `Bearer ${daemon.apiToken}`, 'content-type': 'application/json' }, body: '{}' })).json()) as { url: string }
@@ -81,6 +84,7 @@ describe.skipIf(process.env['CAPTURE'] === undefined)('screenshots', () => {
     await dashboard.emulateMedia({ colorScheme: 'dark' })
     await dashboard.goto(login.url)
     await dashboard.waitForTimeout(1_500)
+    await assertNoLocalPaths(dashboard, 'dashboard')
     await dashboard.screenshot({ path: join(OUT, 'dashboard.png'), fullPage: true })
   })
 })

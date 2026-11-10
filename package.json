@@ -1,6 +1,6 @@
 {
   "name": "universal-ai-agent-chrome-connector",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Universal AI Agent Chrome Connector — by Corsen AI. Your signed-in web chats become a local OpenAI/Anthropic API, your whitelisted tabs become an MCP server.",
   "license": "Apache-2.0",

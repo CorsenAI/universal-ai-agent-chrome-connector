@@ -74,6 +74,20 @@ export interface DaemonProcess {
 }
 
 /** The BUILT daemon, as a user would run it, in a temporary home. */
+/**
+ * Refuse a published image whose page shows a path of this machine (the developer's home or the
+ * temporary directory the test homes live in). Screenshots are public: README and Store listing.
+ */
+export async function assertNoLocalPaths(page: Page, what: string): Promise<void> {
+  const text = await page.evaluate(() => document.body.innerText)
+  for (const local of [homedir(), tmpdir()]) {
+    if (text.includes(local)) throw new Error(`${what} shows a local path (${local}); it must not be published`)
+  }
+}
+
+/** Environment variables the agent configurator reads to locate config files (see locations.ts). */
+export const AGENT_LOCATION_VARIABLES = ['CLAUDE_CONFIG_DIR', 'CLINE_MCP_SETTINGS_PATH'] as const
+
 export async function startDaemon(options: { fakeAgents?: readonly string[] } = {}): Promise<DaemonProcess> {
   if (!existsSync(DAEMON_ENTRY)) throw new Error(`missing ${DAEMON_ENTRY}: run pnpm build first`)
   const port = await freePort()
@@ -83,8 +97,11 @@ export async function startDaemon(options: { fakeAgents?: readonly string[] } = 
   mkdirSync(userHome, { recursive: true })
   for (const dir of options.fakeAgents ?? []) mkdirSync(join(userHome, dir), { recursive: true })
   let output = ''
+  const env: NodeJS.ProcessEnv = { ...process.env, CORSEN_CONNECTOR_HOME: join(home, 'connector'), HOME: userHome, USERPROFILE: userHome, APPDATA: join(userHome, 'AppData', 'Roaming'), XDG_CONFIG_HOME: join(userHome, '.config') }
+  // Variables that point agents at config files outside the fake home must not reach the daemon.
+  for (const name of AGENT_LOCATION_VARIABLES) delete env[name]
   const child: ChildProcess = spawn(process.execPath, [DAEMON_ENTRY, 'start', '--no-open', '--port', String(port)], {
-    env: { ...process.env, CORSEN_CONNECTOR_HOME: join(home, 'connector'), HOME: userHome, USERPROFILE: userHome, APPDATA: join(userHome, 'AppData', 'Roaming'), XDG_CONFIG_HOME: join(userHome, '.config') },
+    env,
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   child.stdout?.on('data', (chunk: Buffer) => (output += chunk.toString()))

@@ -20,7 +20,7 @@
 <body>
 <p class="note">Canonical address: <a href="https://corsen.ai/privacy/universal-ai-agent-connector/">corsen.ai/privacy/universal-ai-agent-connector</a>. This page carries the same text.</p>
 <h1>Universal AI Agent Connector — Privacy Policy</h1>
-<p>Last reviewed: 2026-11-09. Applies to Universal AI Agent Connector 0.1.0 (Chrome extension) and its local daemon (<code>@corsen-ai/universal-connector</code>, distributed as source at <a href="https://github.com/CorsenAI/universal-ai-agent-chrome-connector">github.com/CorsenAI/universal-ai-agent-chrome-connector</a>).</p>
+<p>Last reviewed: 2026-11-10. Applies to Universal AI Agent Connector 0.1.0 and 0.1.1 (Chrome extension) and its local daemon (<code>@corsen-ai/universal-connector</code>, distributed as source at <a href="https://github.com/CorsenAI/universal-ai-agent-chrome-connector">github.com/CorsenAI/universal-ai-agent-chrome-connector</a>).</p>
 <p>Universal AI Agent Connector links the Chrome tabs you choose to the AI agents that run on your own computer. This policy says what the extension handles, where it goes, and what it does not do — in the terms the Chrome Web Store data-use form asks for, and accurately.</p>
 <p>Publisher: Corsen AI. Contact: <a href="mailto:hello@corsen.ai">hello@corsen.ai</a>.</p>
 
@@ -31,7 +31,7 @@
 <h2>Data the extension handles</h2>
 <h3>Content of tabs you expose to agents (role "MCP")</h3>
 <p><strong>What.</strong> For a tab you gave the MCP role: its visible text (as Markdown or as an accessibility tree with short element handles), title and address; console messages, JavaScript errors and failed network requests; the JSON and GraphQL requests the page itself makes; and a screenshot when an agent asks for one.</p>
-<p><strong>When.</strong> Only for a tab you gave this role, only while it keeps it, and only when one of your agents calls a tool. Every tab starts with no role.</p>
+<p><strong>When.</strong> Only for a tab you gave this role, only while it keeps it, and only when one of your agents calls a tool. Every tab starts with no role. A role belongs to the tab, not to the site: if you open another site in a tab that has the MCP role, or an agent navigates it, that site is exposed too until you set the tab back to Ignored.</p>
 <p><strong>Where it goes.</strong> From the tab, to the extension, to the daemon on <code>127.0.0.1</code>, to the agent that asked. The extension adds no other destination.</p>
 <p><strong>Masked before it leaves the page</strong> (and masked again by the daemon):</p>
 <ul>

@@ -28,6 +28,7 @@ const ALLOWED_FILES = [
   /^assets\/[\w.-]+\.(js|css)$/,
   /^icons\/(icon-(16|32|48|128)|mark)\.png$/,
   /^_locales\/(en|fr)\/messages\.json$/,
+  /^THIRD_PARTY_LICENSES\.txt$/,
 ]
 const ALLOWED_KEYS = new Set([
   'manifest_version', 'name', 'short_name', 'version', 'description', 'default_locale', 'homepage_url', 'minimum_chrome_version',
@@ -151,6 +152,13 @@ if (JSON.stringify(permissions) !== JSON.stringify(PERMISSIONS)) problem(`permis
 const csp = manifest.content_security_policy?.extension_pages ?? ''
 const scriptSrc = /script-src([^;]*)/.exec(csp)?.[1] ?? ''
 if (/unsafe-eval|unsafe-inline|https?:/.test(scriptSrc)) problem(`extension_pages script-src allows more than the package: ${scriptSrc.trim()}`)
+// Images only from the package or inline: the extension talks to no host but the local daemon (D-022).
+const imgSrc = /img-src([^;]*)/.exec(csp)?.[1]?.trim() ?? null
+if (imgSrc !== "'self' data:") problem(`extension_pages img-src must be exactly 'self' data: (found ${imgSrc === null ? 'none' : imgSrc})`)
+const connectSrc = (/connect-src([^;]*)/.exec(csp)?.[1] ?? '').trim().split(/\s+/)
+for (const source of connectSrc) {
+  if (source !== "'self'" && !/^(ws|http):\/\/(127\.0\.0\.1|localhost):\*$/.test(source)) problem(`extension_pages connect-src allows a non-local destination: ${source}`)
+}
 for (const path of [manifest.background?.service_worker, manifest.action?.default_popup, manifest.side_panel?.default_path]) {
   if (typeof path !== 'string' || !entries.has(path)) problem(`manifest points to a missing file: ${path}`)
 }
@@ -188,6 +196,16 @@ for (const [size, path] of Object.entries(manifest.icons ?? {})) {
   if (!signature || width !== Number(size) || height !== Number(size)) problem(`icon ${size}: ${path} is ${signature ? `${width}x${height}` : 'not a PNG'}`)
 }
 if (manifest.icons?.['128'] === undefined) problem('no 128x128 icon: the Store icon comes from it')
+
+// License notices of the bundled third-party packages (MIT and ISC require them in every copy).
+const notices = entries.get('THIRD_PARTY_LICENSES.txt')?.toString('utf8') ?? ''
+if (notices === '') problem('THIRD_PARTY_LICENSES.txt is missing: the bundled packages need their license notices')
+else {
+  for (const name of ['react', 'react-dom', 'scheduler', 'zod', 'lucide-react']) {
+    if (!new RegExp(`^${name.replace(/[-]/g, '\\-')} \\S+ — `, 'm').test(notices)) problem(`THIRD_PARTY_LICENSES.txt has no notice for ${name}`)
+  }
+  if (/(?:\/home\/|\/Users\/|[A-Za-z]:\\Users\\|node_modules)/.test(notices)) problem('THIRD_PARTY_LICENSES.txt carries a path of the machine that built it')
+}
 
 // ---- 5. Scripts and pages -------------------------------------------------------------------
 const FORBIDDEN = [

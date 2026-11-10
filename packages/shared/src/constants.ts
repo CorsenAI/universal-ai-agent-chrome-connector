@@ -12,7 +12,7 @@ export const PRODUCT_FULL_NAME = 'Universal AI Agent Connector — by Corsen AI'
 export const VENDOR = 'Corsen AI'
 export const PACKAGE_NAME = '@corsen-ai/universal-connector'
 export const CLI_NAME = 'universal-connector'
-export const VERSION = '0.1.0'
+export const VERSION = '0.1.1'
 
 /** Wire protocol generation between the extension and the daemon. Peers must be equal. */
 export const PROTOCOL_VERSION = 1

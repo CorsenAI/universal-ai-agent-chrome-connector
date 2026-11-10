@@ -6,7 +6,7 @@ import type { BackupStore } from './backups'
 import { findExecutable, runCommand, type CommandRunner } from './command-runner'
 import { ConfigFileError, backupFile, editJsonc, readJsonc, valueAt, writeAtomically } from './json-config'
 import type { LaunchCommand } from './launch'
-import { displayPath, type PlatformContext } from './locations'
+import { claudeCodeConfig, displayPath, type PlatformContext } from './locations'
 
 export interface ConfiguratorOptions {
   readonly ctx: PlatformContext
@@ -83,7 +83,8 @@ export class AgentConfigurator {
     const spec = agentSpec(id)
     if (spec.id === 'claude-code') {
       const result = await this.unlink(id)
-      return { ...result, message: `${result.message} (Claude Code keeps all its state in ~/.claude.json, so restore removes our entry instead of rolling the file back.)` }
+      const file = displayPath(this.#options.ctx, claudeCodeConfig(this.#options.ctx))
+      return { ...result, message: `${result.message} (Claude Code keeps all its state in ${file}, so restore removes our entry instead of rolling the file back.)` }
     }
     const targets = spec.targets(this.#options.ctx, this.#options.launch)
     const backupPaths: string[] = []
@@ -145,7 +146,10 @@ export class AgentConfigurator {
     if (exe === null || target === undefined) return this.#editAll(spec, targets, action)
     const backupPaths: string[] = []
     if (existsSync(target.file)) backupPaths.push(backupFile(target.file, { agentId: spec.id, reason: action, backups: this.#options.backups }))
-    const env = { ...process.env, ...ctx.env } as NodeJS.ProcessEnv
+    // The CLI gets exactly the environment the paths above were computed from (in the daemon, the
+    // process environment). Merging in process.env would let a variable such as CLAUDE_CONFIG_DIR
+    // send the CLI to a different file than the one backed up and verified.
+    const env = { ...ctx.env } as NodeJS.ProcessEnv
     const remove = await this.#runner(exe, ['mcp', 'remove', '--scope', 'user', MCP_SERVER_NAME], { env, timeoutMs: 30_000 })
     logger.debug('claude mcp remove', { code: remove.code })
     if (action === 'connect') {

@@ -33,6 +33,9 @@ Version 0.1. Each statement names the code that enforces it and the test that pr
   resolution (`mcp-server/executor.ts#resolveTarget`). Proven: `e2e/connector.e2e.ts` ("keeps an
   ignored tab private"), `test/integration.test.ts` ("fails closed on a tab that is not exposed").
 - Ignored tabs are never sent to the daemon (only their count): `controller.ts#browserState`.
+- A role belongs to the tab, not to the site: when the user or an agent opens another address in an
+  exposed tab, that page is exposed too until the user sets the tab back to Ignored. Navigating to a
+  page Chrome protects (Web Store, `chrome://`) resets the tab to Ignored (`background/index.ts`).
 - Chrome's "is debugging this browser" banner is shown on controlled tabs; cancelling it detaches
   and resets the tab to Ignored (`onDetach` reason `canceled_by_user`). Panic stop detaches every
   session and clears all roles (proven in E2E).
@@ -81,7 +84,12 @@ Version 0.1. Each statement names the code that enforces it and the test that pr
 - Edits never touch an unparsable file, preserve comments, are atomic, follow symlinks, and are
   preceded by a timestamped backup recorded in `backups.json` (`agent-configurator/json-config.ts`).
 - Tool approvals are left off (`autoApprove: []`, `alwaysAllow: []`).
-- Tests run on a temporary `HOME`; the E2E daemon gets a fake user home.
+- Claude Code is configured through its own CLI, which receives exactly the environment the
+  configurator used to compute, back up and verify the file (`$CLAUDE_CONFIG_DIR/.claude.json` when
+  that variable is set, `~/.claude.json` otherwise).
+- Tests run on a temporary `HOME`; the E2E daemon gets a fake user home, without the variables that
+  point agents at config files elsewhere (`CLAUDE_CONFIG_DIR`, `CLINE_MCP_SETTINGS_PATH`). Published
+  screenshots are refused when the captured page shows a path of the machine.
 
 ### Supply chain and packaging
 - No remote code, no CDN, no telemetry. Zod's JIT (`new Function`) is disabled at runtime and its
@@ -89,6 +97,11 @@ Version 0.1. Each statement names the code that enforces it and the test that pr
   checked for `eval`/`new Function` in E2E, and the Store zip is read back by
   `scripts/verify-extension-zip.mjs` (byte-for-byte with the build, file allowlist, manifest, scripts).
 - Permissions are the minimum the features need; no host permissions, no content scripts.
+- Extension pages talk to no host but the local daemon: `connect-src` lists only loopback addresses
+  and `img-src` only the package and inline images (tab favicons are shown only when inline), checked
+  by `scripts/verify-extension-zip.mjs`.
+- The package ships `THIRD_PARTY_LICENSES.txt`, generated at build time from the module graph, with
+  the license notice of every bundled third-party package.
 
 ## Residual risks
 

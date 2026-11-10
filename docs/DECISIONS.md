@@ -203,3 +203,40 @@ belongs behind a link or in a screenshot (developer.chrome.com/docs/webstore/pro
 Decision: both descriptions name no agent or company (the supported clients are listed in the README,
 which the description links to), the disclaimer is generic, and no keyword appears more than five
 times. The screenshots keep showing the agents list, as the policy suggests.
+
+## D-022 — Extension pages reach no host but the daemon; bundled licenses ship (2026-11-10)
+
+- **Favicons.** The side panel showed tab favicons from their https addresses, which is a network
+  request from an extension page, while the privacy policy and the Store disclosures say the
+  extension talks only to the daemon on 127.0.0.1. Chrome's `favicon` permission serves icons from
+  its local cache but adds the install warning "Read the icons of the websites you visit"
+  (developer.chrome.com/docs/extensions/reference/permissions-list), and an update that adds a warning
+  disables the extension until the user accepts it. Decision: only inline (`data:`) favicons are
+  shown, a generic icon otherwise, enforced by `img-src 'self' data:` in the extension pages CSP
+  (stricter rules are allowed: developer.chrome.com/docs/extensions/reference/manifest/content-security-policy).
+  `scripts/verify-extension-zip.mjs` refuses another `img-src` and any non-loopback `connect-src`.
+- **Licenses.** React, React DOM, scheduler and Zod (MIT) and lucide-react (ISC) are bundled; their
+  comments only pointed to a LICENSE file that was not shipped, and Zod carried no notice. Decision: a
+  build plugin writes `THIRD_PARTY_LICENSES.txt` from the final module graph (the LICENSE file of
+  every bundled package) and fails when one is missing; the verifier and the E2E hygiene test require
+  the five notices.
+- **Local Network Access** (checked, no change): Chromium classifies `chrome-extension://` documents
+  and workers as the loopback address space (`ChromeContentBrowserClient::DetermineAddressSpaceFromURL`,
+  main branch, read 2026-11-10), so the WebSocket to 127.0.0.1 never meets the permission prompt.
+
+## D-023 — Agent configuration follows CLAUDE_CONFIG_DIR; proxies re-read rotated keys (2026-11-10)
+
+- Claude Code keeps `.claude.json` in `CLAUDE_CONFIG_DIR` when that variable is set
+  (code.claude.com/docs/en/claude-directory). The configurator computed `~/.claude.json` while the CLI
+  it ran inherited the process environment: the CLI wrote one file, the configurator backed up and
+  verified another, and reported a failure. Decision: paths follow `CLAUDE_CONFIG_DIR`, and the CLI
+  receives exactly the configurator's environment (no merge with `process.env`), so the file backed
+  up, written and verified is one file. Tests use a stand-in CLI that honors the variable, and one test
+  proves the test process environment never reaches it. The E2E daemon no longer inherits
+  `CLAUDE_CONFIG_DIR` or `CLINE_MCP_SETTINGS_PATH`, and screenshot runs refuse a page that shows a
+  path of the machine.
+- After `token --rotate`, a stdio proxy kept the key it read at start and got HTTP 401 until its agent
+  restarted. Decision: on 401 the proxy reads the credentials again and retries once; when the daemon
+  still refuses, the tool result says the daemon was started with other credentials (another home)
+  instead of calling it unreachable. `start` and `dashboard` give the same explanation instead of
+  nothing or a generic refusal, and `stop` falls back to the process id when the daemon refuses.

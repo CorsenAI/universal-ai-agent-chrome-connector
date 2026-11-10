@@ -139,18 +139,21 @@ describe('connect / unlink / restore (file agents)', () => {
 })
 
 describe('Claude Code through its CLI', () => {
-  it('calls `claude mcp remove` then `claude mcp add-json --scope user` and verifies the result', async () => {
+  /**
+   * A stand-in `claude` CLI that records its arguments and edits its state file like the real one:
+   * `$CLAUDE_CONFIG_DIR/.claude.json` when that variable is set, `~/.claude.json` otherwise.
+   */
+  function fakeClaudeCli(): { bin: string; log: string } {
     const bin = join(home.path, 'bin')
     mkdirSync(bin, { recursive: true })
     const log = join(home.path, 'claude-calls.log')
-    // A stand-in CLI that records its arguments and edits ~/.claude.json like the real one.
     writeFileSync(
       join(bin, 'claude'),
       `#!/usr/bin/env node
 const fs = require('node:fs'); const path = require('node:path')
 const args = process.argv.slice(2)
 fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify(args) + '\\n')
-const file = path.join(process.env.HOME, '.claude.json')
+const file = process.env.CLAUDE_CONFIG_DIR ? path.join(process.env.CLAUDE_CONFIG_DIR, '.claude.json') : path.join(process.env.HOME, '.claude.json')
 const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {}
 data.mcpServers = data.mcpServers || {}
 if (args[1] === 'add-json') data.mcpServers[args[4]] = JSON.parse(args[5])
@@ -159,6 +162,64 @@ fs.writeFileSync(file, JSON.stringify(data))
 `,
     )
     chmodSync(join(bin, 'claude'), 0o755)
+    return { bin, log }
+  }
+
+  it('runs the CLI with the configurator environment only, never the test process one', async () => {
+    const seen: Array<Readonly<Record<string, string | undefined>>> = []
+    const previous = process.env['CLAUDE_CONFIG_DIR']
+    process.env['CLAUDE_CONFIG_DIR'] = join(home.path, 'must-not-be-used')
+    try {
+      const { bin } = fakeClaudeCli()
+      ctx = { platform: 'linux', home: home.path, env: { PATH: `${bin}:${process.env['PATH'] ?? ''}`, HOME: home.path } }
+      configurator = new AgentConfigurator({
+        ctx,
+        launch,
+        backups: new BackupStore(join(home.path, '.corsen-connector', 'backups.json')),
+        logger: silentLogger,
+        runner: async (_command, _args, options) => {
+          seen.push({ ...options.env })
+          return { code: 0, stdout: '', stderr: '' }
+        },
+      })
+      await configurator.connect('claude-code').catch(() => undefined)
+      expect(seen.length).toBeGreaterThan(0)
+      for (const env of seen) {
+        expect(env['CLAUDE_CONFIG_DIR']).toBeUndefined()
+        expect(env['HOME']).toBe(home.path)
+      }
+      expect(existsSync(join(home.path, 'must-not-be-used'))).toBe(false)
+    } finally {
+      if (previous === undefined) delete process.env['CLAUDE_CONFIG_DIR']
+      else process.env['CLAUDE_CONFIG_DIR'] = previous
+    }
+  })
+
+  it('follows CLAUDE_CONFIG_DIR: verifies and backs up the file the CLI really writes', async () => {
+    const { bin } = fakeClaudeCli()
+    const configDir = join(home.path, 'claude-profile')
+    mkdirSync(configDir, { recursive: true })
+    writeFileSync(join(configDir, '.claude.json'), JSON.stringify({ numStartups: 7 }))
+    writeFileSync(join(home.path, '.claude.json'), JSON.stringify({ untouched: true }))
+    configurator = make({ PATH: `${bin}:${process.env['PATH'] ?? ''}`, HOME: home.path, CLAUDE_CONFIG_DIR: configDir })
+    expect(configurator.status('claude-code').configPaths).toEqual(['~/claude-profile/.claude.json'])
+
+    const connected = await configurator.connect('claude-code')
+    expect(connected.agent.connected).toBe(true)
+    expect(connected.message).toContain('Connected Claude Code')
+    expect(connected.backupPaths).toHaveLength(1)
+    expect(connected.backupPaths[0]?.startsWith(join(configDir, '.claude.json.corsen-backup-'))).toBe(true)
+    expect(read(join(configDir, '.claude.json')).mcpServers['corsen-browser']).toMatchObject({ type: 'stdio', command: '/usr/bin/node' })
+    expect(read(join(home.path, '.claude.json'))).toEqual({ untouched: true })
+    expect(readdirSync(home.path).filter((name) => name.startsWith('.claude.json.corsen-backup-'))).toEqual([])
+
+    const restored = await configurator.restore('claude-code')
+    expect(restored.agent.connected).toBe(false)
+    expect(restored.message).toContain('~/claude-profile/.claude.json')
+  })
+
+  it('calls `claude mcp remove` then `claude mcp add-json --scope user` and verifies the result', async () => {
+    const { bin, log } = fakeClaudeCli()
     writeFileSync(join(home.path, '.claude.json'), JSON.stringify({ projects: {}, numStartups: 3 }))
     configurator = make({ PATH: `${bin}:${process.env['PATH'] ?? ''}`, HOME: home.path })
     expect(configurator.status('claude-code').method).toBe('cli')

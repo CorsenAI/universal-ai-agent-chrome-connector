@@ -15,7 +15,10 @@ const out = (line = ''): void => {
   process.stdout.write(`${line}\n`)
 }
 
-async function adminPost(port: number, token: string, path: string): Promise<Record<string, unknown> | null> {
+type AdminAnswer = { readonly status: number; readonly body: Record<string, unknown> | null } | null
+
+/** POST to an admin route; null when the daemon cannot be reached at all. */
+async function adminPost(port: number, token: string, path: string): Promise<AdminAnswer> {
   try {
     const response = await fetch(`http://127.0.0.1:${port}${path}`, {
       method: 'POST',
@@ -23,10 +26,17 @@ async function adminPost(port: number, token: string, path: string): Promise<Rec
       body: '{}',
       signal: AbortSignal.timeout(5_000),
     })
-    return response.ok ? ((await response.json()) as Record<string, unknown>) : null
+    const body = response.ok ? ((await response.json().catch(() => null)) as Record<string, unknown> | null) : null
+    return { status: response.status, body }
   } catch {
     return null
   }
+}
+
+/** The daemon on the port is ours but holds other credentials: started from another home. */
+function otherCredentialsHint(port: number): string {
+  const cli = cliName()
+  return `The daemon on port ${port} was started with other credentials (another CORSEN_CONNECTOR_HOME). Stop it from where it was started (${cli} stop), or use another port: ${cli} --port <n>.`
 }
 
 export async function cmdStart(args: CliArgs): Promise<void> {
@@ -35,12 +45,15 @@ export async function cmdStart(args: CliArgs): Promise<void> {
   const paths = connectorPaths(home)
   const existing = await probeDaemon(port)
   if (existing.kind === 'ours') {
-    const credentials = loadOrCreateCredentials(paths.credentials)
+    const credentials = readCredentials(paths.credentials)
     out(`${green('●')} The connector daemon is already running on port ${port} (pid ${existing.health.pid}).`)
-    const login = await adminPost(port, credentials.apiToken, '/api/admin/login-code')
-    if (typeof login?.['url'] === 'string') {
-      out(`  Dashboard: ${login['url']}`)
-      if (args.open) openUrl(login['url'])
+    const login = credentials === null ? null : await adminPost(port, credentials.apiToken, '/api/admin/login-code')
+    const url = login?.body?.['url']
+    if (typeof url === 'string') {
+      out(`  Dashboard: ${url}`)
+      if (args.open) openUrl(url)
+    } else if (credentials === null || login?.status === 401) {
+      out(yellow(`  ${otherCredentialsHint(port)}`))
     }
     return
   }
@@ -204,11 +217,14 @@ export async function cmdDashboard(args: CliArgs): Promise<void> {
   const port = resolvePort(args.port)
   const credentials = readCredentials(connectorPaths(connectorHome()).credentials)
   const probe = await probeDaemon(port)
-  if (credentials === null || probe.kind !== 'ours') throw new Error(`the daemon is not running on port ${port}; start it with \`${cliName()}\``)
+  if (probe.kind !== 'ours') throw new Error(`the daemon is not running on port ${port}; start it with \`${cliName()}\``)
+  if (credentials === null) throw new Error(otherCredentialsHint(port))
   const login = await adminPost(port, credentials.apiToken, '/api/admin/login-code')
-  if (typeof login?.['url'] !== 'string') throw new Error('the daemon refused to create a login link')
-  out(`Dashboard: ${login['url']}`)
-  if (args.open) openUrl(login['url'])
+  if (login?.status === 401) throw new Error(otherCredentialsHint(port))
+  const url = login?.body?.['url']
+  if (typeof url !== 'string') throw new Error('the daemon refused to create a login link')
+  out(`Dashboard: ${url}`)
+  if (args.open) openUrl(url)
 }
 
 export async function cmdStop(args: CliArgs): Promise<void> {
@@ -221,7 +237,8 @@ export async function cmdStop(args: CliArgs): Promise<void> {
   }
   const credentials = readCredentials(paths.credentials)
   const stopped = credentials !== null ? await adminPost(port, credentials.apiToken, '/api/admin/shutdown') : null
-  if (stopped === null) {
+  // Not accepted (unreachable, or a daemon holding other credentials): stop it by its pid instead.
+  if (stopped === null || stopped.status !== 200) {
     try {
       process.kill(probe.health.pid, 'SIGTERM')
     } catch (error) {

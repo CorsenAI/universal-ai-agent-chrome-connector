@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client'
 import { chromium, type Browser, type Page } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { ROOT, chromiumBinary, launchBrowser, startDaemon, startFixtureServer, waitFor, type BrowserHandle, type DaemonProcess } from './helpers'
+import { ROOT, assertNoLocalPaths, chromiumBinary, launchBrowser, startDaemon, startFixtureServer, waitFor, type BrowserHandle, type DaemonProcess } from './helpers'
 
 /**
  * Chrome Web Store images (opt-in: `pnpm store:assets`). Every product pixel is a capture of the
@@ -106,6 +106,7 @@ async function panelView(tab: RegExp | null): Promise<Buffer> {
     await panel.getByRole('tab', { name: tab }).click()
     await panel.waitForTimeout(500)
   }
+  await assertNoLocalPaths(panel, `side panel (${tab?.source ?? 'Quick Connect'})`)
   return capture(panel, PANEL)
 }
 
@@ -194,6 +195,7 @@ describe.skipIf(process.env['STORE_ASSETS'] === undefined)('Chrome Web Store ima
     await dashboard.emulateMedia({ colorScheme: 'dark' })
     await dashboard.goto(login.url)
     await dashboard.waitForTimeout(1_500)
+    await assertNoLocalPaths(dashboard, 'dashboard')
     const dashboardShot = await capture(dashboard, PAGE)
     await compose('01-connect.png', dashboardShot, await panelView(null))
 

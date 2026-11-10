@@ -17,7 +17,7 @@
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3%20%C2%B7%20125%2B-4285F4)](packages/extension)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7%20strict-3178c6)](tsconfig.base.json)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A5%2022-339933)](packages/daemon)
-[![Tests](https://img.shields.io/badge/tests-151%20unit%20%2B%2021%20real--browser-22c55e)](#tests)
+[![Tests](https://img.shields.io/badge/tests-157%20unit%20%2B%2021%20real--browser-22c55e)](#tests)
 
 by **Corsen AI** · local only · no telemetry · unofficial community project
 
@@ -190,7 +190,7 @@ curl http://127.0.0.1:43110/v1/chat/completions \
 
 | Agent | What the connector writes | Restart |
 |---|---|---|
-| Claude Code | `claude mcp add-json --scope user corsen-browser …` (official CLI; `~/.claude.json` is backed up first) | running sessions: `/mcp` |
+| Claude Code | `claude mcp add-json --scope user corsen-browser …` (official CLI; its state file, `~/.claude.json` or `$CLAUDE_CONFIG_DIR/.claude.json`, is backed up first) | running sessions: `/mcp` |
 | Cursor | `~/.cursor/mcp.json` | no |
 | Windsurf (legacy Cascade) | `~/.codeium/windsurf/mcp_config.json` | refresh |
 | Devin Desktop (ex-Windsurf, June 2026) | `~/.config/devin/mcp_config.json` (`%APPDATA%\devin\…` on Windows) | yes |
@@ -207,7 +207,7 @@ the last backup (the replaced version is backed up too). Approvals stay off: `au
 
 <div align="center"><img src="docs/assets/dashboard.png" width="760" alt="Local dashboard: pairing, 1-click agents, endpoints, tabs and live activity"></div>
 
-Agents launch `universal-connector mcp` (stdio). It speaks both MCP eras (2025 `initialize` and the
+Agents launch the daemon's `mcp` command (stdio). It speaks both MCP eras (2025 `initialize` and the
 2026-07-28 stateless revision) and **starts the daemon in the background if it is not running**.
 
 ---
@@ -217,7 +217,9 @@ Agents launch `universal-connector mcp` (stdio). It speaks both MCP eras (2025 `
 Loopback is **not** a trust boundary — every web page in your browser can talk to `127.0.0.1`. So:
 
 - **Private by default.** A tab is *Ignored* until you choose a role: no debugger, no read, no input.
-  Agents can never change a role; after a browser restart every tab is Ignored again.
+  Agents can never change a role; after a browser restart every tab is Ignored again. A role belongs
+  to the tab, not to the site: a site you (or an agent) open later in an exposed tab is exposed too,
+  until you set the tab back to Ignored.
 - **Visible.** Chrome shows its "is debugging this browser" banner on controlled tabs; cancelling it
   makes the tab private again. **Panic stop** detaches everything in one click.
 - **Paired, not trusted.** Extension ⇄ daemon uses mutual, role-bound HMAC-SHA256 over a pairing secret
@@ -232,7 +234,8 @@ Loopback is **not** a trust boundary — every web page in your browser can talk
 - **Untrusted pages.** Page text and web-LLM answers are data. Agents can still be prompt-injected by
   what they read — expose only tabs you would let an assistant read.
 - **No remote code, no telemetry, no eval** (the build strips Zod's JIT; the Store zip is read back and
-  scanned before release).
+  scanned before release). Extension pages load images only from the package (`img-src 'self' data:`),
+  and the package carries the license notices of the code it bundles (`THIRD_PARTY_LICENSES.txt`).
 
 Details: [docs/SECURITY-MODEL.md](docs/SECURITY-MODEL.md) · wire protocol: [docs/PROTOCOL.md](docs/PROTOCOL.md) ·
 report a vulnerability: [SECURITY.md](SECURITY.md).
