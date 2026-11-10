@@ -240,3 +240,27 @@ times. The screenshots keep showing the agents list, as the policy suggests.
   still refuses, the tool result says the daemon was started with other credentials (another home)
   instead of calling it unreachable. `start` and `dashboard` give the same explanation instead of
   nothing or a generic refusal, and `stop` falls back to the process id when the daemon refuses.
+
+## D-024 — Form bodies and console addresses masked; the daemon masks a second time (2026-11-10)
+
+- The shared redaction module said the daemon masked again, and the privacy policy said so too; the
+  daemon did not. Decision: `mcp-server/second-pass.ts` applies the address, header and body rules
+  to every tool result before an agent receives it (addresses, header maps, captured bodies, DevTools
+  messages and stack frames, Markdown link and image targets). Field values stay the distiller's
+  job, inside the page; visible page text is not rewritten. Each rule is idempotent, so a correct
+  extension sees no change.
+- Captured bodies were masked by JSON rules only: the password of a failed form login or the code of
+  an OAuth exchange (`application/x-www-form-urlencoded`) reached agents. Decision: form bodies are
+  masked by the address-parameter rules, names decoded by the URL standard's form parser; a body
+  shaped like a form without a content type is treated as one.
+- Console messages could carry an address with a token. Decision: addresses written in DevTools
+  messages go through the address rules; an address without credentials is kept as written.
+- `Network.getRequestPostData` answers in base64 when the body is not valid UTF-8 (Blink,
+  `InspectorPostBodyParser`, read 2026-11-10); the tap ignored the flag. Decision: such a body is
+  replaced by `[binary body omitted]`.
+- Every captured JSON body was re-serialized, which rounds integers above 2^53 (MDN, `JSON.parse`).
+  Decision: a body is re-serialized only when a value has to be masked; otherwise its text is kept.
+- Privacy policy corrected in the same change after an independent read of the code: continuous
+  console and network capture for exposed tabs, bounded in-memory buffers (300 entries, 100 calls)
+  cleared on role change, tab close and panic stop, cookie headers masked rather than "not read",
+  `.bak` copies next to agent configs, Windows paths, CLI commands from the checkout.

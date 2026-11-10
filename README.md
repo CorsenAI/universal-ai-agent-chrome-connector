@@ -17,7 +17,7 @@
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3%20%C2%B7%20125%2B-4285F4)](packages/extension)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7%20strict-3178c6)](tsconfig.base.json)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A5%2022-339933)](packages/daemon)
-[![Tests](https://img.shields.io/badge/tests-157%20unit%20%2B%2021%20real--browser-22c55e)](#tests)
+[![Tests](https://img.shields.io/badge/tests-177%20unit%20%2B%2022%20real--browser-22c55e)](#tests)
 
 by **Corsen AI** · local only · no telemetry · unofficial community project
 
@@ -229,8 +229,9 @@ Loopback is **not** a trust boundary — every web page in your browser can talk
   API key is required, POST bodies must be JSON. The dashboard uses a one-time login link and an
   `HttpOnly; SameSite=Strict` cookie. Secrets live in `~/.corsen-connector/credentials.json` (0600).
 - **Redaction before the trust boundary.** Passwords, one-time codes, card fields, hidden inputs,
-  secret URL parameters, credential headers and secret JSON keys are masked in the browser, then
-  again in the daemon. Screenshots are pixels: **they are not redacted**.
+  secret URL parameters (also inside console messages), credential headers, secret JSON keys and
+  secret form parameters are masked in the browser; the daemon masks addresses, headers and bodies
+  a second time before an agent sees them. Screenshots are pixels: **they are not redacted**.
 - **Untrusted pages.** Page text and web-LLM answers are data. Agents can still be prompt-injected by
   what they read — expose only tabs you would let an assistant read.
 - **No remote code, no telemetry, no eval** (the build strips Zod's JIT; the Store zip is read back and

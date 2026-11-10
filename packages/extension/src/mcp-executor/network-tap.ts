@@ -1,5 +1,5 @@
 import type Protocol from 'devtools-protocol'
-import { LIMITS, classifyApiResponse, graphqlOperationName, redactHeaders, redactJsonText, scrubUrl, type CapturedCall } from '@corsen-ai/shared'
+import { LIMITS, classifyApiResponse, graphqlOperationName, headerValue, redactBodyText, redactHeaders, scrubUrl, type CapturedCall } from '@corsen-ai/shared'
 import type { DebuggerManager } from '../cdp/debugger-manager'
 import type { DevtoolsFeed } from './devtools-feed'
 
@@ -154,7 +154,9 @@ export class NetworkTap {
   async #postData(tabId: number, requestId: string, pending: Pending): Promise<string | undefined> {
     if (pending.postData !== undefined || !pending.hasPostData) return pending.postData
     try {
-      return (await this.#debugger.send(tabId, 'Network.getRequestPostData', { requestId })).postData
+      const sent = await this.#debugger.send(tabId, 'Network.getRequestPostData', { requestId })
+      // Chrome answers in base64 only for a body that is not valid UTF-8: binary, not maskable as text.
+      return sent.base64Encoded ? '[binary body omitted]' : sent.postData
     } catch {
       return undefined
     }
@@ -169,9 +171,9 @@ export class NetworkTap {
     const mimeType = pending.mimeType ?? ''
     const durationMs = Math.max(0, (event.timestamp - pending.startedMonotonic) * 1000)
     const [rawBody, rawPost] = await Promise.all([this.#body(tabId, event.requestId, mimeType), this.#postData(tabId, event.requestId, pending)])
-    const requestBody = rawPost !== undefined ? redactJsonText(rawPost) : undefined
+    const requestBody = rawPost !== undefined ? redactBodyText(rawPost, headerValue(pending.requestHeaders, 'content-type') ?? '') : undefined
     if (pending.want === 'failure') {
-      const body = rawBody !== undefined ? clip(redactJsonText(rawBody), FAILURE_BODY_CHARS) : undefined
+      const body = rawBody !== undefined ? clip(redactBodyText(rawBody, mimeType), FAILURE_BODY_CHARS) : undefined
       this.#feed.add(tabId, {
         kind: 'network',
         level: 'error',
@@ -194,7 +196,7 @@ export class NetworkTap {
       })
       return
     }
-    const body = rawBody !== undefined ? clip(redactJsonText(rawBody), API_BODY_CHARS) : undefined
+    const body = rawBody !== undefined ? clip(redactBodyText(rawBody, mimeType), API_BODY_CHARS) : undefined
     const operation = pending.apiKind === 'graphql' ? graphqlOperationName(rawPost) : undefined
     capture.calls.push({
       id: capture.nextId,

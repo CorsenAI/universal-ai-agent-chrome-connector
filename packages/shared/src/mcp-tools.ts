@@ -145,7 +145,7 @@ export const MCP_TOOLS = [
   {
     name: 'browser_capture_network_api',
     title: 'Capture JSON / GraphQL API calls',
-    description: `Return the latest JSON and GraphQL requests the page itself made (method, URL, status, redacted headers, request and response bodies). Lets you read data from an internal or authenticated API through the user's existing session without re-authenticating. Captured only while the tab is exposed; credentials in headers are masked. ${SAFETY}`,
+    description: `Return the latest JSON and GraphQL requests the page itself made (method, URL, status, redacted headers, request and response bodies). Lets you read data from an internal or authenticated API through the user's existing session without re-authenticating. Captured only while the tab is exposed; credential headers, secret JSON keys and secret form parameters are masked. ${SAFETY}`,
     inputSchema: NetworkCaptureInput,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },

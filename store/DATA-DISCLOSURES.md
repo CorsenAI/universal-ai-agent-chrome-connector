@@ -9,11 +9,11 @@ declared when it leaves the browser for the local companion. The public text is
 
 | Category | Declared | What exactly |
 |---|---|---|
-| Website content | yes | Text, accessibility tree, title, address, screenshots, console and network errors, and the page's own JSON/GraphQL calls — of tabs the user gave the MCP role, when an agent asks. Prompts typed into, and answers read from, chat tabs the user gave the LLM role. |
+| Website content | yes | Text, accessibility tree, title, address, screenshots, console and network errors, and the page's own JSON/GraphQL calls — of tabs the user gave the MCP role. Reads and screenshots happen when an agent asks; console and network capture runs while the role is set, held in memory (last 300 console entries, last 100 calls) and sent only when an agent asks. Prompts typed into, and answers read from, chat tabs the user gave the LLM role. |
 | Web history | yes | Title and address of tabs that have a role (credentials removed from addresses). |
 | User activity | yes | Network monitoring of tabs with the MCP role (failed requests, JSON/GraphQL calls), credential headers masked. |
 | Personal communications | yes | Prompts and answers of chat tabs with the LLM role. |
-| Authentication information | no | Passwords, one-time codes, credential headers and secret fields are masked before leaving the page; cookies are never read. |
+| Authentication information | no | Passwords, one-time codes, credential headers, secret fields and the secret parameters of addresses and form bodies are masked in the browser, and masked again by the daemon; the browser's cookie store is never read and cookie headers are masked. |
 | Personally identifiable information | covered by website content | Only as it appears in pages the user exposes. |
 | Health, financial and payment, location | no | Card fields are masked; nothing else is collected. |
 
@@ -35,10 +35,12 @@ user's account. The extension adds no destination, and nothing reaches Corsen AI
 | Transferred to third parties? | Not by the extension. The user's own agents may send it to the model provider the user configured. |
 | Remote code? | No. |
 
-## Masking before the data leaves the page
+## Masking in the browser, and again in the daemon
 
 Password and hidden fields; fields the page declares as one-time codes, passwords or card data;
 fields whose name or label indicates a password, secret, token, API key, one-time code, card number,
-security code, IBAN, SSN or PIN; credential parameters and embedded credentials in addresses;
-credential headers and secret-looking keys in captured traffic. Detection relies on the signals a
-page gives. Screenshots are pixels and are not masked.
+security code, IBAN, SSN or PIN; credential parameters and embedded credentials in addresses,
+including addresses written in console messages; credential headers, secret-looking JSON keys and
+secret form parameters in captured traffic (binary request bodies are left out). The daemon applies
+the address, header and body rules a second time before an agent receives the data. Detection
+relies on the signals a page gives. Screenshots are pixels and are not masked.

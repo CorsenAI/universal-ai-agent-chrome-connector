@@ -164,6 +164,31 @@ describe('The Hands — MCP tools on a real page', () => {
     expect(capture).not.toContain('xyz-secret-token')
   })
 
+  it('masks form bodies and console addresses in real traffic, and keeps exact JSON numbers', async () => {
+    await app.evaluate(async () => {
+      console.error('Retry failed for https://api.example.test/v1/items?api_key=K3Y-c0ns0le')
+      await fetch('/api/login', { method: 'POST', body: new URLSearchParams({ username: 'ann', password: 'f0rm-p4ss' }) })
+      await fetch('/api/token', { method: 'POST', body: new URLSearchParams({ grant_type: 'authorization_code', code: 'c0de-e2e' }) }).then((response) => response.json())
+      await fetch('/api/big').then((response) => response.text())
+    })
+    const feed = text(await waitFor(async () => {
+      const result = await tool('browser_get_devtools_errors')
+      return text(result).includes('/api/login') && text(result).includes('api.example.test') ? result : undefined
+    }, 10_000, 'login failure and console entry'))
+    expect(feed).toContain('HTTP 401')
+    expect(feed).toContain('username=ann')
+    expect(feed).not.toContain('f0rm-p4ss')
+    expect(feed).not.toContain('K3Y-c0ns0le')
+    const capture = text(await waitFor(async () => {
+      const result = await tool('browser_capture_network_api', { url_contains: '/api/' })
+      return text(result).includes('/api/big') && text(result).includes('/api/token') ? result : undefined
+    }, 10_000, 'token and big-number calls'))
+    expect(capture).toContain('grant_type=authorization_code')
+    expect(capture).not.toContain('c0de-e2e')
+    expect(capture).not.toContain('at-e2e-secret')
+    expect(capture).toContain('12345678901234567890')
+  })
+
   it('reads the accessibility tree with refs', async () => {
     const tree = text(await tool('browser_read_page', { mode: 'accessibility' }))
     expect(tree).toMatch(/button "Increment".*\[ref=e\d+\]/)

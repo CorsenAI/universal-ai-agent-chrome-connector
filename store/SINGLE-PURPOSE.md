@@ -20,7 +20,8 @@ the agents and the extension, on `127.0.0.1`.
 ## Outside the purpose
 
 - Any tab the user did not give a role: nothing is read from it and nothing happens in it.
-- Cookies, history, bookmarks, saved passwords: not read; the permissions are not requested.
+- The cookie store, history, bookmarks, saved passwords: not read; the permissions are not requested.
+  Cookie headers seen in the captured traffic of an exposed tab are masked.
 - Any communication with Corsen AI: there is no Corsen server.
 - Acting without a request: the extension does nothing on its own initiative.
 

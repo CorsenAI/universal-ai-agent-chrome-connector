@@ -9,6 +9,8 @@ import {
   ScreenshotInput,
   estimateTokens,
   isMcpToolName,
+  scrubAddressesInText,
+  scrubUrl,
   tabIdFromTargetId,
   targetIdForTab,
   toWireError,
@@ -20,6 +22,7 @@ import type { ActivityLog } from '../activity/activity-log'
 import type { Logger } from '../util/logger'
 import type { BrowserHub } from '../ws-hub/hub'
 import { formatDevtools, formatNetwork, formatReadPage, formatTargets } from './format'
+import { secondPassCalls, secondPassDevtools, secondPassPage, secondPassTargets } from './second-pass'
 
 export type ToolContent = { type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string }
 
@@ -33,7 +36,8 @@ export interface ToolCallResult {
  * and the `/api/tools/call` route used by stdio proxies, so both transports behave identically.
  *
  * Target resolution fails closed: a named target must be an exposed tab; with no name, exactly one
- * exposed tab must exist. The extension re-checks the role before touching the tab.
+ * exposed tab must exist. The extension re-checks the role before touching the tab. What the
+ * extension returns goes through the daemon's second redaction pass (`second-pass.ts`) first.
  */
 export class McpToolExecutor {
   readonly #hub: BrowserHub
@@ -92,7 +96,7 @@ export class McpToolExecutor {
     switch (name) {
       case 'browser_list_targets': {
         const { targets } = await this.#hub.call('targets.list', {}, { timeoutMs, signal })
-        return { result: text(formatTargets(targets)) }
+        return { result: text(formatTargets(secondPassTargets(targets))) }
       }
       case 'browser_read_page': {
         const input = data as z.infer<typeof ReadPageInput>
@@ -103,14 +107,14 @@ export class McpToolExecutor {
           { timeoutMs, signal },
         )
         const tokensSaved = Math.max(0, estimateTokens(page.sourceChars) - estimateTokens(page.outputChars))
-        return { result: text(formatReadPage(target.targetId, page)), tokensSaved, targetId: target.targetId }
+        return { result: text(formatReadPage(target.targetId, secondPassPage(page))), tokensSaved, targetId: target.targetId }
       }
       case 'browser_act': {
         const input = data as z.infer<typeof ActInput>
         const target = this.resolveTarget(input.target_id)
         const act = toActParams(input)
         const outcome = await this.#hub.call('page.act', { tabId: target.tabId, act }, { timeoutMs: Math.max(timeoutMs, (act.timeoutMs ?? 0) + 15_000), signal })
-        const lines = [outcome.summary, `Now at: ${outcome.title || '(untitled)'} — ${outcome.url}`]
+        const lines = [scrubAddressesInText(outcome.summary), `Now at: ${outcome.title || '(untitled)'} — ${scrubUrl(outcome.url)}`]
         if (outcome.navigated) lines.push('The page navigated: refs from earlier reads are stale, call browser_read_page again.')
         return { result: text(lines.join('\n')), targetId: target.targetId }
       }
@@ -122,7 +126,7 @@ export class McpToolExecutor {
           { tabId: target.tabId, kinds: input.kinds ?? [], sinceId: input.since_id ?? 0, limit: input.limit ?? 50, clear: input.clear ?? false },
           { timeoutMs, signal },
         )
-        return { result: text(formatDevtools(target.targetId, feed.entries, feed.totals, feed.lastId)), targetId: target.targetId }
+        return { result: text(formatDevtools(target.targetId, secondPassDevtools(feed.entries), feed.totals, feed.lastId)), targetId: target.targetId }
       }
       case 'browser_capture_network_api': {
         const input = data as z.infer<typeof NetworkCaptureInput>
@@ -141,7 +145,7 @@ export class McpToolExecutor {
           },
           { timeoutMs, signal },
         )
-        return { result: text(formatNetwork(target.targetId, capture.calls, capture.lastId)), targetId: target.targetId }
+        return { result: text(formatNetwork(target.targetId, secondPassCalls(capture.calls), capture.lastId)), targetId: target.targetId }
       }
       case 'browser_screenshot': {
         const input = data as z.infer<typeof ScreenshotInput>

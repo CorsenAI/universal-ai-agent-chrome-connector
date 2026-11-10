@@ -69,11 +69,22 @@ Version 0.1. Each statement names the code that enforces it and the test that pr
   data), fields whose name/label looks secret, secret URL parameters (`access_token`, `code`, …).
   Rules ported from the Corsen DSH Connector (`shared/src/redact.ts`, `extension/src/inpage/distiller.ts`).
 - In the network tap: credential headers (`authorization`, `cookie`, `set-cookie`, `x-api-key`,
-  anything with `token`/`secret`/`session`/…) and secret JSON keys in captured bodies.
-- Proven: `test/distiller.test.ts`, `shared/test/redact.test.ts`, E2E (no `hunter2`, `p4ss`,
-  `SECRET123`, `xyz-secret-token` in agent-visible output).
-- **Not redacted**: screenshots (pixels), and page text that has no signal (an API key printed in a
-  paragraph). Documented in the tool description.
+  anything with `token`/`secret`/`session`/…), secret JSON keys in captured bodies, and the secret
+  parameters of `application/x-www-form-urlencoded` bodies (a failed form login, an OAuth code
+  exchange). A request body Chrome can only give as base64 (not UTF-8) is left out. A JSON body
+  with nothing to mask is kept as captured, so integers above 2^53 keep their digits.
+- In the DevTools feed: addresses written in console messages, exceptions and log lines go through
+  the address rules (`scrubAddressesInText`).
+- In the daemon, again (`mcp-server/second-pass.ts`): addresses, header maps, captured bodies,
+  addresses in DevTools messages and stack frames, and Markdown link and image targets are masked
+  a second time before an agent receives them, so a faulty or outdated extension cannot hand a
+  credential to an agent. Every rule is idempotent: data the extension already masked is unchanged.
+- Proven: `test/distiller.test.ts`, `shared/test/redact.test.ts`, `extension/test/network-tap.test.ts`,
+  `daemon/test/second-pass.test.ts`, the daemon integration test (an extension that skips masking),
+  E2E (no `hunter2`, `p4ss`, `f0rm-p4ss`, `SECRET123`, `xyz-secret-token`, OAuth code or console key in
+  agent-visible output).
+- **Not redacted**: screenshots (pixels), page text that has no signal (an API key printed in a
+  paragraph), and `multipart/form-data` bodies. Documented in the tool description.
 
 ### Honest results
 - Actions use trusted CDP input; a confirm/prompt dialog opened by an action is cancelled and the

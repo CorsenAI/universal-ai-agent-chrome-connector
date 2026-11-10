@@ -21,25 +21,25 @@
 <p class="note">Canonical address: <a href="https://corsen.ai/privacy/universal-ai-agent-connector/">corsen.ai/privacy/universal-ai-agent-connector</a>. This page carries the same text.</p>
 <h1>Universal AI Agent Connector — Privacy Policy</h1>
 <p>Last reviewed: 2026-11-10. Applies to Universal AI Agent Connector 0.1.0 and 0.1.1 (Chrome extension) and its local daemon (<code>@corsen-ai/universal-connector</code>, distributed as source at <a href="https://github.com/CorsenAI/universal-ai-agent-chrome-connector">github.com/CorsenAI/universal-ai-agent-chrome-connector</a>).</p>
-<p>Universal AI Agent Connector links the Chrome tabs you choose to the AI agents that run on your own computer. This policy says what the extension handles, where it goes, and what it does not do — in the terms the Chrome Web Store data-use form asks for, and accurately.</p>
+<p>Universal AI Agent Connector links the Chrome tabs you choose to the AI agents that run on your own computer. This policy states what the extension handles, where it goes, and what it does not do.</p>
 <p>Publisher: Corsen AI. Contact: <a href="mailto:hello@corsen.ai">hello@corsen.ai</a>.</p>
 
 <h2>The short version</h2>
-<p>The connector works <strong>only on your computer</strong>. Corsen AI operates no server, relay, account system, analytics service or telemetry endpoint for it, and receives none of the data described below.</p>
+<p>The connector itself runs <strong>only on your computer</strong>. Corsen AI operates no server, relay, account system, analytics service or telemetry endpoint for it, and receives none of the data described below.</p>
 <p>The extension talks only to the connector's daemon on <code>127.0.0.1</code>, on your computer. The agents you connect to that daemon receive what they ask for from the tabs you chose, and send it wherever you configured them to send it — typically their model provider. That part is governed by those agents' settings and policies.</p>
 
 <h2>Data the extension handles</h2>
 <h3>Content of tabs you expose to agents (role "MCP")</h3>
-<p><strong>What.</strong> For a tab you gave the MCP role: its visible text (as Markdown or as an accessibility tree with short element handles), title and address; console messages, JavaScript errors and failed network requests; the JSON and GraphQL requests the page itself makes; and a screenshot when an agent asks for one.</p>
-<p><strong>When.</strong> Only for a tab you gave this role, only while it keeps it, and only when one of your agents calls a tool. Every tab starts with no role. A role belongs to the tab, not to the site: if you open another site in a tab that has the MCP role, or an agent navigates it, that site is exposed too until you set the tab back to Ignored.</p>
+<p><strong>What.</strong> For a tab you gave the MCP role: its visible text (as Markdown or as an accessibility tree with short element handles), title and address; console errors and warnings, JavaScript errors and failed network requests; the JSON and GraphQL request and response bodies the page itself exchanges; and a screenshot when an agent asks for one.</p>
+<p><strong>When.</strong> Only for a tab you gave this role, and only while it keeps it. Page reads, actions and screenshots happen only when one of your agents calls a tool; console and network capture runs continuously for an exposed tab, in memory, and reaches the daemon only when an agent asks for it. Every tab starts with no role. A role belongs to the tab, not to the site: if you open another site in a tab that has the MCP role, or an agent navigates it, that site is exposed too until you set the tab back to Ignored.</p>
 <p><strong>Where it goes.</strong> From the tab, to the extension, to the daemon on <code>127.0.0.1</code>, to the agent that asked. The extension adds no other destination.</p>
-<p><strong>Masked before it leaves the page</strong> (and masked again by the daemon):</p>
+<p><strong>Masked in the browser, before anything is sent to the daemon</strong> (the daemon applies the address, header and body rules a second time before an agent receives the data):</p>
 <ul>
 <li>password fields and hidden form fields;</li>
 <li>fields the page declares as one-time codes, passwords or payment card data;</li>
 <li>fields whose name or label indicates a password, secret, token, API key, one-time code, card number, security code, IBAN, SSN or PIN;</li>
-<li>credential-bearing parameters in addresses, and any user name or password embedded in an address;</li>
-<li>in captured network traffic: credential headers (<code>authorization</code>, <code>cookie</code>, <code>set-cookie</code>, <code>x-api-key</code> and similar) and secret-looking keys in request and response bodies.</li>
+<li>credential-bearing parameters in addresses, including addresses written in console messages, and any user name or password embedded in an address;</li>
+<li>in captured network traffic: credential headers (<code>authorization</code>, <code>cookie</code>, <code>set-cookie</code>, <code>x-api-key</code> and similar), secret-looking keys in JSON bodies and secret parameters in form bodies, in requests and responses. Binary request bodies are left out.</li>
 </ul>
 <p><strong>Honest limitation.</strong> Detection relies on the signals a page gives; a field with no telling type, name or label cannot be told apart from an ordinary one. <strong>A screenshot is pixels and nothing in it is masked:</strong> it shows the page as you see it.</p>
 
@@ -56,21 +56,21 @@
 <h2>What the connector does not do</h2>
 <ul>
 <li><strong>Does not send anything to Corsen AI.</strong> No analytics, telemetry, crash reports or usage statistics.</li>
-<li><strong>Does not read cookies</strong>, history, bookmarks, saved passwords or other extensions' data.</li>
+<li><strong>Does not read your browser's cookie store</strong>, history, bookmarks, saved passwords or other extensions' data. Cookie headers in captured traffic are masked in the browser.</li>
 <li><strong>Does not read or act in a tab without a role.</strong> No debugger is attached to it, nothing is read from it, no input reaches it.</li>
-<li><strong>Does not act on its own.</strong> It acts only on a request from a tool on your computer that holds the daemon's key, and only in tabs you chose. Agents cannot change a tab's role.</li>
-<li><strong>Does not keep page content.</strong> Content is produced on request and forwarded. The daemon keeps an activity summary (tool names, timings, sizes), not content.</li>
+<li><strong>Does not act on its own.</strong> It acts when you ask it to from the side panel or the dashboard, or when a tool on your computer that holds the daemon's key asks it to, and only in tabs you chose. Agents cannot change a tab's role.</li>
+<li><strong>Does not write page content to disk.</strong> Content is produced on request and forwarded, or held in bounded in-memory buffers for exposed tabs (the last 300 console entries and the last 100 network calls with their bodies); changing the tab's role, closing the tab or a panic stop clears them. The daemon keeps an activity summary (tool names, timings, sizes), not content.</li>
 <li><strong>Does not sell or transfer data</strong>, and does not use it for advertising, profiling or creditworthiness.</li>
 </ul>
 
 <h2>The local daemon</h2>
-<p>The daemon listens on <code>127.0.0.1</code> only and refuses requests from web pages (Host and Origin checks) and requests without its key. It stores its pairing code and API key in <code>~/.corsen-connector/credentials.json</code>, readable by your user account only, and, when you connect an agent, a timestamped backup of that agent's configuration file before changing it.</p>
+<p>The daemon listens on <code>127.0.0.1</code> only and refuses requests from web pages (Host and Origin checks) and requests without its key. It stores its pairing code and API key in <code>~/.corsen-connector/credentials.json</code> (<code>%USERPROFILE%\.corsen-connector\credentials.json</code> on Windows), readable by your user account only (file mode 0600 on macOS and Linux, your profile's access control on Windows). When you connect an agent, it writes a timestamped backup of that agent's configuration next to the file (<code>….corsen-backup-….bak</code>) before changing it.</p>
 
 <h2>Your control</h2>
 <ul>
 <li>Panic stop (side panel or dashboard) detaches every tab and resets all roles. Cancelling Chrome's "started debugging this browser" bar makes a tab private again.</li>
-<li><code>universal-connector token --rotate</code> replaces the pairing code and the API key; <code>universal-connector unlink --all</code> removes the connector from your agents.</li>
-<li>Removing the extension deletes its storage. Deleting <code>~/.corsen-connector</code> removes the daemon's data.</li>
+<li>From the repository checkout, <code>pnpm connector token --rotate</code> replaces the pairing code and the API key; <code>pnpm connector unlink --all</code> removes the connector from your agents.</li>
+<li>Removing the extension deletes its storage. Deleting <code>~/.corsen-connector</code> (<code>%USERPROFILE%\.corsen-connector</code> on Windows) removes the daemon's own state; the <code>.bak</code> copies it wrote next to your agents' configuration files remain — delete them too for a clean removal.</li>
 </ul>
 
 <h2>Limited Use</h2>
@@ -80,6 +80,6 @@
 <p>Changes to this policy are dated here. A change in how data is handled is announced in the release notes before it ships.</p>
 
 <h2>Contact</h2>
-<p>Corsen AI — <a href="mailto:hello@corsen.ai">hello@corsen.ai</a>. Security reports: see <code>SECURITY.md</code> in the repository.</p>
+<p>Corsen AI — <a href="mailto:hello@corsen.ai">hello@corsen.ai</a>. Security reports: see <a href="https://github.com/CorsenAI/universal-ai-agent-chrome-connector/blob/main/SECURITY.md"><code>SECURITY.md</code></a> in the repository.</p>
 </body>
 </html>

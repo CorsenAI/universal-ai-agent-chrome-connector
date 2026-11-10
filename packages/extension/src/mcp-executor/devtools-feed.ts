@@ -1,5 +1,5 @@
 import type Protocol from 'devtools-protocol'
-import { LIMITS, scrubUrl, type DevtoolsEntry, type DevtoolsKind, type DevtoolsTotals } from '@corsen-ai/shared'
+import { LIMITS, scrubAddressesInText, scrubUrl, type DevtoolsEntry, type DevtoolsKind, type DevtoolsTotals } from '@corsen-ai/shared'
 import type { DebuggerManager } from '../cdp/debugger-manager'
 
 type NewEntry = Omit<DevtoolsEntry, 'id'>
@@ -29,6 +29,7 @@ export function formatStack(stack: Protocol.Runtime.StackTrace | undefined): str
 /**
  * DevTools Error Feeder: console errors/warnings, uncaught exceptions and browser log errors captured
  * live on MCP target tabs (network failures are added by the NetworkTap). Ring buffer per tab.
+ * Addresses written in messages go through the same credential rules as the entry's own URL.
  */
 export class DevtoolsFeed {
   readonly #tabs = new Map<number, TabFeed>()
@@ -96,7 +97,7 @@ export class DevtoolsFeed {
       kind: 'console',
       level,
       timestamp: event.timestamp,
-      message: clip(event.args.map(remoteText).join(' ') || `console.${event.type}`),
+      message: clip(scrubAddressesInText(event.args.map(remoteText).join(' ') || `console.${event.type}`)),
       ...(top !== undefined ? { url: scrubUrl(top.url), line: top.lineNumber, column: top.columnNumber } : {}),
       ...(stack !== undefined ? { stack: clip(stack) } : {}),
     })
@@ -109,7 +110,7 @@ export class DevtoolsFeed {
       kind: 'exception',
       level: 'error',
       timestamp: event.timestamp,
-      message: clip(details.exception?.description ?? details.text),
+      message: clip(scrubAddressesInText(details.exception?.description ?? details.text)),
       ...(details.url !== undefined ? { url: scrubUrl(details.url) } : {}),
       line: details.lineNumber,
       column: details.columnNumber,
@@ -123,7 +124,7 @@ export class DevtoolsFeed {
       kind: 'log',
       level: 'error',
       timestamp: entry.timestamp,
-      message: clip(`[${entry.source}] ${entry.text}`),
+      message: clip(scrubAddressesInText(`[${entry.source}] ${entry.text}`)),
       ...(entry.url !== undefined ? { url: scrubUrl(entry.url) } : {}),
       ...(entry.lineNumber !== undefined ? { line: entry.lineNumber } : {}),
     })

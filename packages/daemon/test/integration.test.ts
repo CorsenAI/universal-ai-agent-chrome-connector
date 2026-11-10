@@ -66,6 +66,50 @@ beforeAll(async () => {
         }
         case 'system.echo':
           return { nonce: params.nonce, extensionVersion: '0.1.0' }
+        // An extension that skipped its own redaction: the daemon's second pass must catch it.
+        case 'devtools.errors':
+          return {
+            entries: [
+              {
+                id: 1,
+                kind: 'network',
+                level: 'error',
+                timestamp: 1_700_000_000_000,
+                message: 'POST http://localhost:3000/login?session=s3ss → HTTP 401 Unauthorized',
+                url: 'http://localhost:3000/login?session=s3ss',
+                network: {
+                  method: 'POST',
+                  url: 'http://localhost:3000/login?session=s3ss',
+                  status: 401,
+                  statusText: 'Unauthorized',
+                  resourceType: 'Document',
+                  requestHeaders: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: 'sid=c00kie' },
+                  requestBody: 'username=ann&password=hunter2',
+                },
+              },
+            ],
+            totals: { console: 0, exception: 0, log: 0, network: 1 },
+            lastId: 1,
+          }
+        case 'network.capture':
+          return {
+            calls: [
+              {
+                id: 1,
+                kind: 'json',
+                method: 'POST',
+                url: 'http://localhost:3000/oauth/token',
+                status: 200,
+                mimeType: 'application/json',
+                timestamp: 1_700_000_000_000,
+                requestHeaders: { 'content-type': 'application/x-www-form-urlencoded', authorization: 'Bearer b3arer' },
+                requestBody: 'grant_type=authorization_code&code=c0de',
+                responseBody: '{"access_token":"t0ken","expires_in":3600}',
+                responseBodyTruncated: false,
+              },
+            ],
+            lastId: 1,
+          }
         default:
           throw Object.assign(new Error(`unexpected ${method}`), { code: 'UNSUPPORTED' })
       }
@@ -256,6 +300,21 @@ describe('MCP over Streamable HTTP (official client)', () => {
     const body = (await response.json()) as { isError?: boolean; content: Array<{ text: string }> }
     expect(body.isError).toBe(true)
     expect(body.content[0]?.text).toMatch(/^NO_TARGET/)
+  })
+
+  it('masks credentials an extension failed to mask before an agent sees them', async () => {
+    const call = async (name: string): Promise<string> => {
+      const response = await fetch(`${base()}/api/tools/call`, { method: 'POST', headers: auth(), body: JSON.stringify({ name, arguments: {} }) })
+      const body = (await response.json()) as { isError?: boolean; content: Array<{ text: string }> }
+      expect(body.isError).toBeUndefined()
+      return body.content.map((item) => item.text).join('\n')
+    }
+    const devtools = await call('browser_get_devtools_errors')
+    const network = await call('browser_capture_network_api')
+    expect(devtools).toContain('HTTP 401')
+    expect(network).toContain('/oauth/token')
+    for (const secret of ['s3ss', 'c00kie', 'hunter2']) expect(devtools).not.toContain(secret)
+    for (const secret of ['b3arer', 'c0de', 't0ken']) expect(network).not.toContain(secret)
   })
 
   it('records token savings in the activity totals', () => {

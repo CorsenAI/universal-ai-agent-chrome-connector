@@ -48,6 +48,13 @@ export async function startFixtureServer(): Promise<{ base: string; close: () =>
     if (url.pathname === '/api/items') return json(200, { items: [{ id: 1, name: 'Bolts', token: 'xyz-secret-token' }] })
     if (url.pathname === '/api/broken') return json(500, { error: 'db down', detail: 'connection refused' })
     if (url.pathname === '/graphql') return json(200, { data: { me: { id: 'u1' } } })
+    if (url.pathname === '/api/login') return json(401, { error: 'bad credentials' })
+    if (url.pathname === '/api/token') return json(200, { access_token: 'at-e2e-secret', token_type: 'bearer' })
+    if (url.pathname === '/api/big') {
+      // An integer above 2^53, written as text: JSON.parse would round it.
+      response.writeHead(200, { 'content-type': 'application/json' })
+      return response.end('{"id": 12345678901234567890, "name": "Big"}')
+    }
     if (url.pathname === '/docs') {
       response.writeHead(200, { 'content-type': 'text/html' })
       return response.end('<h1>Docs</h1>')

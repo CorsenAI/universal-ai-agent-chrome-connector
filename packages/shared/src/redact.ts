@@ -98,6 +98,29 @@ export function scrubUrl(raw: string): string {
   return url.toString()
 }
 
+/** `scheme://…` up to a space, quote, bracket or parenthesis: an address written in free text. */
+const ADDRESS_IN_TEXT = /\b[a-z][a-z0-9+.-]*:\/\/[^\s"'`<>()[\]{}]+/gi
+
+/** One address found in text: rewritten by {@link scrubUrl} only when that changes something. */
+function scrubAddress(address: string): string {
+  let parsed: URL
+  try {
+    parsed = new URL(address)
+  } catch {
+    return address
+  }
+  const scrubbed = scrubUrl(address)
+  return scrubbed === parsed.toString() ? address : scrubbed
+}
+
+/**
+ * Scrub the addresses written in free text (console messages, log lines, Markdown link targets).
+ * An address without credentials is kept byte for byte, and so is the text around it.
+ */
+export function scrubAddressesInText(text: string): string {
+  return text.replace(ADDRESS_IN_TEXT, scrubAddress)
+}
+
 export function isSecretHeader(name: string): boolean {
   const lowered = String(name ?? '').toLowerCase()
   if (SECRET_HEADER_NAMES.includes(lowered)) return true
@@ -133,19 +156,83 @@ function maskJsonValue(value: unknown, depth: number): unknown {
   return value
 }
 
+/** True when parsed JSON holds a secret-named property whose value is not masked yet. */
+function hasUnmaskedSecret(value: unknown, depth: number): boolean {
+  if (depth > 64) return false
+  if (Array.isArray(value)) return value.some((item) => hasUnmaskedSecret(item, depth + 1))
+  if (value !== null && typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).some(([key, inner]) =>
+      isSecretJsonKey(key) && (typeof inner === 'string' || typeof inner === 'number') ? inner !== MASK : hasUnmaskedSecret(inner, depth + 1),
+    )
+  }
+  return false
+}
+
+/** Regex pass over `"key": "value"` pairs, for text that is not valid JSON (a cut body, JSON lines). */
+function maskJsonPairs(text: string): string {
+  return text.replace(/"([^"\\]{1,80})"\s*:\s*"((?:[^"\\]|\\.)*)"/g, (whole, key: string) =>
+    isSecretJsonKey(key) ? `"${key}":"${MASK}"` : whole,
+  )
+}
+
 /**
- * Mask secret-looking JSON properties in a captured body. Valid JSON is parsed and re-serialized;
- * anything else gets a regex pass over `"key": "value"` pairs. Never throws.
+ * Mask secret-looking JSON properties in a captured body. Valid JSON is re-serialized only when a
+ * value has to change: `JSON.parse` turns every number into a double, so re-serializing a body with
+ * nothing to mask would round integers above 2^53 (MDN, JSON.parse). Such a body keeps its exact
+ * text, still passed through the regex pass (it catches a secret repeated under a duplicate key).
+ * Anything that is not valid JSON gets the regex pass alone. Never throws.
  */
 export function redactJsonText(text: string): string {
   if (text === '') return text
+  let parsed: unknown
   try {
-    return JSON.stringify(maskJsonValue(JSON.parse(text), 0))
+    parsed = JSON.parse(text)
   } catch {
-    return text.replace(/"([^"\\]{1,80})"\s*:\s*"((?:[^"\\]|\\.)*)"/g, (whole, key: string) =>
-      isSecretJsonKey(key) ? `"${key}":"${MASK}"` : whole,
-    )
+    return maskJsonPairs(text)
   }
+  return hasUnmaskedSecret(parsed, 0) ? JSON.stringify(maskJsonValue(parsed, 0)) : maskJsonPairs(text)
+}
+
+/**
+ * Mask the secret parameters of an `application/x-www-form-urlencoded` body with the address rules
+ * ({@link isSecretParam}); every other byte stays as captured. Names are decoded by the URL standard's
+ * form parser, so `pass%77ord` and `pass+word` are recognized like in an address.
+ */
+function maskFormText(text: string): string {
+  return text
+    .split('&')
+    .map((pair) => {
+      const separator = pair.indexOf('=')
+      if (separator === -1) return pair
+      const rawName = pair.slice(0, separator)
+      const name = new URLSearchParams(rawName).keys().next().value ?? ''
+      return isSecretParam(name) ? `${rawName}=${MASK}` : pair
+    })
+    .join('&')
+}
+
+const FORM_TYPE = 'application/x-www-form-urlencoded'
+/** `name=value(&name=value)*` without spaces: a form body sent without its content type. */
+const FORM_SHAPE = /^[^\s&=]+=[^\s&]*(?:&[^\s&=]+=[^\s&]*)*$/
+
+/**
+ * Mask a captured request or response body: form bodies by the address rules, everything else by
+ * the JSON rules. `contentType` is the request's `Content-Type` or the response's MIME type; without
+ * one, a body shaped like a form is treated as a form. Never throws.
+ */
+export function redactBodyText(text: string, contentType = ''): string {
+  if (text === '') return text
+  const type = contentType.toLowerCase()
+  if (type.includes(FORM_TYPE) || (type === '' && FORM_SHAPE.test(text))) return maskFormText(text)
+  return redactJsonText(text)
+}
+
+/** A header's value in a captured header map, whatever the case of its name. */
+export function headerValue(headers: Readonly<Record<string, string>> | undefined, name: string): string | undefined {
+  if (headers === undefined) return undefined
+  const wanted = name.toLowerCase()
+  for (const [key, value] of Object.entries(headers)) if (key.toLowerCase() === wanted) return value
+  return undefined
 }
 
 /** Plain-JSON configuration handed to in-page functions (they cannot import modules). */
